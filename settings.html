@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>栄養計算機 - 設定</title>
+    <style>
+        body {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+
+        .input-s {
+            width: 30px;
+        }
+
+        .input-m {
+            width: 50px;
+        }
+
+        .input-l {
+            width: 90px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input:focus {
+            outline: 1px solid #007bff;
+            border-color: #007bff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #ffffff;
+        }
+
+        #DIALOG {
+            /* モーダルダイアログの場合は自動的にウインドの中央に
+	  表示するので position: fixed; などの設定は不要です。
+	 */
+
+            /* 大きさをウインドサイズに連動して可変にする */
+            box-sizing: border-box;
+            /* padding, border も含めた大きさにする */
+            height: 85%;
+            /* % で指定して可変サイズにする */
+            width: 85%;
+
+            background: #333;
+            opacity: 0.95;
+            /* 透明度 */
+            padding: 1.5em;
+            border-radius: 10px;
+        }
+
+        #DIALOG textarea {
+            margin: 1em 0 0 0;
+            box-sizing: border-box;
+            width: 100%;
+            height: calc(100% - 60px);
+            /* ボタンの高さの分を引く */
+
+            background: #ddd;
+            padding: 0.5em;
+            color: #222;
+            font-size: 10.5pt;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div>
+        <h2>設定画面</h2>
+        <button onclick="location.href='index.html'">計算シートに戻る</button>
+        <p>1000ccあたりのデータを記載して下さい。<br>タンパク量はグラム osmratio経腸栄養はnull<br>電解質は内部的にはmgで保持。経腸栄養でなければmEqになおして表示
+        </p>
+        <p>
+            <button onclick="showModalDialog()">ふっかつのじゅもんを表示/編集</button>
+            <button onclick="initializePac()">製剤一覧をデモデータに</button>
+        </p>
+        <p>
+            <button onclick="showHide();">ビタミン/栄養入力切替</button>
+        </p>
+        <dialog id="DIALOG" onclose="closeDialog(this);">
+            <form method="dialog">
+                <button value="cancel">閉じる</button>
+                <button value="submit">ふっかつする</button>
+            </form>
+            <label for="restore"></label><textarea id="restore">読込中・・・
+                        </textarea>
+        </dialog>
+        <table id="pacTable">
+            <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col class="input-nut">
+                <col class="input-nut">
+                <col class="input-nut">
+                <col class="input-nut">
+                <col class="input-vit">
+                <col class="input-vit">
+                <col class="input-vit">
+                <col class="input-vit">
+            </colgroup>
+            <thead>
+            <tr>
+                <th>削除</th>
+                <th>id</th>
+                <th>経腸</th>
+                <th>製剤名</th>
+                <th>総Cal</th>
+                <th>水分</th>
+                <th>蛋白</th>
+                <th>糖質</th>
+                <th>1pac量</th>
+                <th>Na</th>
+                <th>K</th>
+                <th>浸透圧比</th>
+            </tr>
+            </thead>
+            <tbody id="pacBody"></tbody>
+        </table>
+    </div>
+
+</div>
+<script>
+    let db;
+    const DB_NAME = 'NutDatabase';
+    const STORE_NAME = 'inputBackUp';
+    const DATA_STORE = 'NutLists';
+
+
+    // データベースを初期化
+    const request = indexedDB.open(DB_NAME, 1);
+
+    request.onerror = (event) => {
+        console.error('Database error:', event.target.error);
+    };
+
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, {keyPath: 'id'});
+        }
+        if (!db.objectStoreNames.contains(DATA_STORE)) {
+            db.createObjectStore(DATA_STORE, {keyPath: 'id'});
+        }
+    };
+
+    request.onsuccess = (event) => {
+        db = event.target.result;
+        getPack();
+        showHide();
+    };
+
+    function showHide() {
+        //おそらくvisibility初期値はnullとかなので、elseの方に行くと思われ、vitの方は初回起動時にcollapse、nutの方はvisibleに設定する
+        document.getElementById('pacTable').querySelectorAll('.input-vit')
+            .forEach(vitCol => {
+                const isVi = vitCol.style.visibility
+                if (isVi === "collapse") {
+                    vitCol.style.visibility = "visible";
+                } else {
+                    vitCol.style.visibility = "collapse";
+                }
+            });
+        document.getElementById('pacTable').querySelectorAll('.input-nut')
+            .forEach(vitCol => {
+                const isVi = vitCol.style.visibility
+                if (isVi === "visible") {
+                    vitCol.style.visibility = "collapse";
+                } else {
+                    vitCol.style.visibility = "visible";
+                }
+            });
+    }
+
+    function makeFirstNutLists() {
+        document.getElementById('restore').value = '[{"id":0,"name":"白湯","pack":"","volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"osmratio":null,"na":0,"k":0},{"id":1,"name":"ハイネイーゲル","pack":"500ml","volume":0,"totalCal":800,"water":880,"protein":32,"glu":134.4,"osmratio":null,"na":1330,"k":1250},{"id":2,"name":"ビーフリード","pack":"500ml","volume":0,"totalCal":420,"water":1000,"protein":30,"glu":75,"osmratio":3,"na":805,"k":780},{"id":3,"name":"10%食塩水","pack":"20ml/1A","volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"osmratio":11,"na":39100,"k":0},{"id":4,"name":"ソルデム3A","pack":"500ml","volume":0,"totalCal":172,"water":1000,"protein":0,"glu":43,"osmratio":1,"na":805,"k":780},{"id":5,"name":"ソルデム3AG","pack":"200ml/500ml","volume":0,"totalCal":300,"water":1000,"protein":0,"glu":75,"osmratio":2,"na":805,"k":780},{"id":6,"name":"生食","pack":"500ml/1L","volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"osmratio":1,"na":3542,"k":0},{"id":7,"name":"5%ブドウ糖液","pack":"20ml/250ml/500ml","volume":0,"totalCal":200,"water":1000,"protein":0,"glu":50,"osmratio":1,"na":0,"k":0},{"id":8,"name":"50%ブドウ糖液","pack":"20ml/200ml","volume":0,"totalCal":2000,"water":1000,"protein":0,"glu":500,"osmratio":12,"na":0,"k":0}]';
+        restoreIndexedDB();
+    }
+
+    function savePacInputValues(id, name, pack, volume, totalCal, water, protein, glu, osmratio, na, k) {
+        const transaction = db.transaction([DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(DATA_STORE);
+        store.put({
+            id: id,
+            name: name,
+            pack: pack,
+            volume: volume,
+            totalCal: totalCal,
+            water: water,
+            protein: protein,
+            glu: glu,
+            osmratio: osmratio,
+            na: na,
+            k: k,
+        });
+    }
+
+    //製剤を読み込む
+    function getPack() {
+        const transaction = db.transaction([DATA_STORE], 'readonly');
+        const store = transaction.objectStore(DATA_STORE);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            let maxID = 0;
+            const records = request.result;
+            document.getElementById('restore').value = JSON.stringify(records);
+            const tbody = document.getElementById('pacBody');
+            tbody.innerHTML = '';
+
+            records.sort((a, b) => a.id - b.id)
+                .forEach(record => {
+                    const row = tbody.insertRow();
+                    const isPack = record.osmratio == null;
+                    const viewNa = isPack ? record.na : (record.na / 23).toFixed(0); //経腸であればそのままmgで表示、点滴であればmEqに直して表示
+                    const viewK = isPack ? record.k : (record.k / 39).toFixed(0);
+                    row.insertCell().innerHTML = `<button onclick="delRow(this)">－</button>`;
+                    row.insertCell().innerHTML = `<div class="resID">${record.id}</div>`;
+                    row.insertCell().innerHTML = `<input type="checkbox" ${isPack ? 'checked' : ''} />`;
+                    row.insertCell().innerHTML = `<input type="text" class="pacValue input-l name" value="${record.name}">`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m totalCal" value="${record.totalCal}">kcal`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m water" value="${record.water}">ml`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-s protein" value="${record.protein}">g`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m glu" value="${record.glu}">g`;
+                    row.insertCell().innerHTML = `<input type="text" class="pacValue input-l pack" value="${record.pack}">`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m na" value="${viewNa}">${isPack ? 'mg' : 'mEq'}`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m k" value="${viewK}">${isPack ? 'mg' : 'mEq'}`;
+                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-s osm" value="${record.osmratio || ''}" ${isPack ? 'disabled' : ''} />`;
+                    maxID = Math.max(maxID, record.id);
+                });
+            document.getElementById('pacTable').querySelectorAll('.pacValue')
+                .forEach(pacVal => {
+                    pacVal.addEventListener('input', inputVolume);
+                });
+            const row = tbody.insertRow();
+            row.insertCell().innerHTML = '<button onclick="addRow(this)">＋</button>'
+            row.insertCell().innerHTML = `<div class="resID">${maxID + 1}</div>`;
+            // document.getElementById('pacTable').querySelector('.pacValue').dispatchEvent(new Event('input'));
+        };
+
+    }
+
+    function inputVolume() {
+        const inputID = Number(this.parentNode.parentNode.querySelector('.resID').textContent);
+        const totalCal = Number(this.parentNode.parentNode.querySelector('.totalCal').value);
+        const name = this.parentNode.parentNode.querySelector('.name').value;
+        const water = Number(this.parentNode.parentNode.querySelector('.water').value);
+        const protein = Number(this.parentNode.parentNode.querySelector('.protein').value);
+        const glu = Number(this.parentNode.parentNode.querySelector('.glu').value);
+        const pack = this.parentNode.parentNode.querySelector('.pack').value;
+        const inputNa = Number(this.parentNode.parentNode.querySelector('.na').value);
+        const inputK = Number(this.parentNode.parentNode.querySelector('.k').value);
+        const inputosm = this.parentNode.parentNode.querySelector('.osm').value;
+
+        const isPack = inputosm === ''; //空欄ならtrue=経腸栄養と判断
+        const na = isPack ? inputNa : inputNa * 23;
+        const k = isPack ? inputK : inputK * 39;
+        const osm = isPack ? null : Number(inputosm);
+
+        savePacInputValues(inputID, name, pack, 0, totalCal, water, protein, glu, osm, na, k);
+    }
+
+    function addRow(con) {
+        const row = con.parentElement.parentElement;
+        const inputID = Number(con.parentNode.parentNode.querySelector('.resID').textContent);
+        row.insertCell().innerHTML = `<input type="checkbox" />`;
+        row.insertCell().innerHTML = `<input type="text" class="pacValue input-l name" value="">`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m totalCal" value="0">kcal`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m water" value="0">ml`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-s protein" value="0">g`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m glu" value="0">g`;
+        row.insertCell().innerHTML = `<input type="text" class="pacValue input-l pack" value="">`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m na" value="0">mEq`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m k" value="0">mEq`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-s osm" value="1" />`;
+
+        document.getElementById('pacTable').querySelectorAll('.pacValue')
+            .forEach(pacVal => {
+                pacVal.addEventListener('input', inputVolume);
+            });
+
+        const delBut = con.parentNode.parentNode.querySelector('button');
+        delBut.setAttribute('onclick', 'delRow(this)');
+        delBut.innerText = "－";
+
+        const tbody = document.getElementById('pacBody');
+        const newRow = tbody.insertRow();
+        newRow.insertCell().innerHTML = '<button onclick="addRow(this)">＋</button>'
+        newRow.insertCell().innerHTML = `<div class="resID">${inputID + 1}</div>`;
+    }
+
+    function delRow(con) {
+        const inputID = Number(con.parentNode.parentNode.querySelector('.resID').textContent);
+        const name = con.parentNode.parentNode.querySelector('.name').value;
+        if (confirm(`${name}(ID:${inputID})を削除します。よろしいですか？`)) {
+            delPack(inputID);
+        }
+    }
+
+    function delPack(id) {
+        const transaction = db.transaction([DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(DATA_STORE);
+        store.delete(id);
+        getPack();
+    }
+
+    function updateRestores() {
+        //十分早いのでArrayに保持してArrayを編集とかせずに毎回最新のIndexedDBを読み込みに行く
+        const transaction = db.transaction([DATA_STORE], 'readonly');
+        const store = transaction.objectStore(DATA_STORE);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            const records = request.result;
+            document.getElementById('restore').value = JSON.stringify(records);
+        }
+    }
+
+    function showModalDialog() {
+        updateRestores();
+        document.getElementById("DIALOG").showModal();  //モーダルでダイアログを表示する。
+    }
+
+    function closeDialog(val) {
+        if (val.returnValue !== "cancel") {
+            if (confirm('記載の呪文で製剤一覧を復活してもよろしいですか？(現在のリストは失われます)')) {
+                restoreIndexedDB();
+                getPack();
+            }
+        }
+    }
+
+    function restoreIndexedDB() {
+        const transaction = db.transaction([DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(DATA_STORE);
+        try {
+            const restoreJSON = JSON.parse(document.getElementById('restore').value);
+            restoreJSON.forEach(pacVal => {
+                console.log(pacVal);
+                store.put(pacVal);
+            });
+        } catch (error) {
+            alert(error);
+        }
+    }
+
+    function initializePac() {
+        if (confirm('製剤一覧を初期化してもよろしいですか？(現在のリストは失われます)')) {
+            makeFirstNutLists();
+            getPack();
+        }
+    }
+
+</script>
+</body>
+
+</html>
