@@ -10,12 +10,13 @@
             /* font-family: Arial, sans-serif; */
             max-width: 600px;
             margin: 0 auto;
+            height: 100%;
             padding: 20px;
         }
 
         .container {
             position: relative;
-            padding-bottom: 60px;
+            padding-bottom: 20vh;
             box-sizing: border-box;
             min-height: 95vh;
         }
@@ -37,8 +38,8 @@
         }
 
         input {
-            padding: 8px;
-            width: 80px;
+            padding: 5px;
+            width: 5em;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
@@ -47,9 +48,11 @@
             outline: 1px solid #007bff;
             border-color: #007bff;
         }
-        #pacTable{
+
+        #pacTable {
             margin-bottom: 25vh;
         }
+
         #result {
             margin-top: 20px;
             margin-bottom: 20px;
@@ -67,7 +70,7 @@
         th,
         td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 5px;
             text-align: center;
         }
 
@@ -78,7 +81,14 @@
         .footer {
             position: fixed;
             bottom: 0;
-            padding: 20px;
+            left: 0;
+            right: 0;
+            overflow: auto;
+            width: 100%;
+            max-width: 90vw;
+            margin: 0 auto;
+            padding: 8px;
+            /*align-content: center;*/
             background-color: rgba(240, 240, 240, 0.5);
             border-radius: 5px;
         }
@@ -86,301 +96,302 @@
 </head>
 
 <body>
-<div class="container">
-    <div class="input-container">
-        <div class="input-group">
-            <label for="height">身長(cm):</label>
-            <input id="height" min="1" required step="0.1" type="number">
+    <div class="container">
+        <div class="input-container">
+            <div class="input-group">
+                <label for="height">身長(cm):</label>
+                <input id="height" min="1" required step="0.1" type="number">
+            </div>
+
+            <div class="input-group">
+                <label for="weight">体重(kg):</label>
+                <input id="weight" min="1" required step="0.1" type="number">
+            </div>
+            <button onclick="location.href='settings.html'">製剤設定シートへ</button>
         </div>
 
-        <div class="input-group">
-            <label for="weight">体重(kg):</label>
-            <input id="weight" min="1" required step="0.1" type="number">
-        </div>
-        <button onclick="location.href='settings.html'">製剤設定シートへ</button>
-    </div>
-
-    <div id="result">
-        <div id="resultText">BMI:</div>
-        <p>推定必要栄養量(/日)(目安)</p>
-        <table>
-            <tbody>
-            <tr>
-                <td>水分量</td>
-                <td>総熱量</td>
-                <td>蛋白(安定/侵襲)</td>
-                <td>脂肪</td>
-                <td>糖質(安定/侵襲)</td>
-            </tr>
-            <tr>
-                <td id="needWater">0ml</td>
-                <td id="needCal">0kcal</td>
-                <td id="needP">0g</td>
-                <td id="needFAT">0</td>
-                <td id="needGlu">0g</td>
-
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <div>
-        <table id="pacTable">
-            <colgroup>
-                <col style="visibility: collapse;">
-                <col>
-                <col>
-                <col>
-            </colgroup>
-            <thead>
-            <tr>
-                <th>id</th>
-                <th>製剤名</th>
-                <th>1pac量</th>
-                <th>投与量
-                    <button onclick="clearVolumes();" type="button">クリア</button>
-                </th>
-            </tr>
-            </thead>
-            <tbody id="pacBody"></tbody>
-        </table>
-    </div>
-
-
-    <div class="footer">
-        栄養：
-        <div id="calcNut">
+        <div id="result">
+            <div id="resultText">BMI:</div>
+            <p>推定必要栄養量(/日)(目安)</p>
             <table>
                 <tbody>
-                <tr>
-                    <td>水分量</td>
-                    <td>総熱量</td>
-                    <td>蛋白量</td>
-                    <td>NPC/N</td>
-                    <td>食塩</td>
-                </tr>
-                <tr>
-                    <td id="calcWater">0ml</td>
-                    <td id="calcCal">0kcal</td>
-                    <td id="calcP">0g</td>
-                    <td id="calcNPCN">0</td>
-                    <td id="calcNaCl">0g</td>
-                </tr>
-                </tbody>
-            </table>
-            輸液/電解質：
-            <table>
-                <tbody>
-                <tr>
-                    <td>総容量</td>
-                    <td>糖質(Hu-R)</td>
-                    <td>Na</td>
-                    <td>K</td>
-                    <td>浸透圧比</td>
-                </tr>
-                <tr>
-                    <td id="calcTVol">0</td>
-                    <td id="calcGlu">0g(0U)</td>
-                    <td id="calcNa">0mg/0mEq</td>
-                    <td id="calcK">0mg/0mEq</td>
-                    <td id="calcOSM">0</td>
+                    <tr>
+                        <td>水分量</td>
+                        <td>総熱量</td>
+                        <td>蛋白(安定/侵襲)</td>
+                        <td>脂肪</td>
+                        <td>糖質(安定/侵襲)</td>
+                    </tr>
+                    <tr>
+                        <td id="needWater">0ml</td>
+                        <td id="needCal">0kcal</td>
+                        <td id="needP">0g</td>
+                        <td id="needFAT">0</td>
+                        <td id="needGlu">0g</td>
 
-                </tr>
+                    </tr>
                 </tbody>
             </table>
         </div>
+        <div>
+            <table id="pacTable">
+                <colgroup>
+                    <col style="visibility: collapse;">
+                    <col>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>製剤名</th>
+                        <th>1pac量</th>
+                        <th>投与量
+                            <button onclick="clearVolumes();" type="button">クリア</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="pacBody"></tbody>
+            </table>
+        </div>
+
+
+        <div class="footer">
+            栄養：
+            <div id="calcNut">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>水分量</td>
+                            <td>総熱量</td>
+                            <td>蛋白量</td>
+                            <td>NPC/N</td>
+                            <td>食塩</td>
+                        </tr>
+                        <tr>
+                            <td id="calcWater">0ml</td>
+                            <td id="calcCal">0kcal</td>
+                            <td id="calcP">0g</td>
+                            <td id="calcNPCN">0</td>
+                            <td id="calcNaCl">0g</td>
+                        </tr>
+                    </tbody>
+                </table>
+                輸液/電解質：
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>総容量</td>
+                            <td>糖質<br>(Hu-R)</td>
+                            <td>Na</td>
+                            <td>K</td>
+                            <td>浸透圧比</td>
+                        </tr>
+                        <tr>
+                            <td id="calcTVol">0</td>
+                            <td id="calcGlu">0g(0U)</td>
+                            <td id="calcNa">0mg<br>0mEq</td>
+                            <td id="calcK">0mg<br>0mEq</td>
+                            <td id="calcOSM">0</td>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
-<script>
-    let db;
-    let pacArray = [];
-    const unitVolume = 1000; //ここの単位を変更すれば元データのタンパク量の1単位を変更可能。デフォルト1000mlなので1000
-    const DB_NAME = 'NutDatabase';
-    const STORE_NAME = 'inputBackUp';
-    const DATA_STORE = 'NutLists';
 
-    // データベースを初期化
-    const request = indexedDB.open(DB_NAME, 1);
+    <script>
+        let db;
+        let pacArray = [];
+        const unitVolume = 1000; //ここの単位を変更すれば元データのタンパク量の1単位を変更可能。デフォルト1000mlなので1000
+        const DB_NAME = 'NutDatabase';
+        const STORE_NAME = 'inputBackUp';
+        const DATA_STORE = 'NutLists';
 
-    request.onerror = (event) => {
-        console.error('Database error:', event.target.error);
-    };
+        // データベースを初期化
+        const request = indexedDB.open(DB_NAME, 1);
 
-    request.onupgradeneeded = (event) => {
-        db = event.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME, {keyPath: 'id'});
-        }
-        if (!db.objectStoreNames.contains(DATA_STORE)) {
-            db.createObjectStore(DATA_STORE, {keyPath: 'id'});
-            alert("製剤一覧が空です。設定シートで設定をしてください")
-        }
-    };
+        request.onerror = (event) => {
+            console.error('Database error:', event.target.error);
+        };
 
-    request.onsuccess = (event) => {
-        db = event.target.result;
-        loadLastInputValues();
-        getPack();
-    };
-
-    // 最後の入力値を読み込む
-    function loadLastInputValues() {
-        const transaction = db.transaction([STORE_NAME], 'readonly');
-        const store = transaction.objectStore(STORE_NAME);
-        const request = store.get('lastInput');
-
-        request.onsuccess = () => {
-            if (request.result) {
-                document.getElementById('height').value = request.result.height || 0;
-                document.getElementById('weight').value = request.result.weight || 0;
-                calculateNeed();
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains(DATA_STORE)) {
+                db.createObjectStore(DATA_STORE, { keyPath: 'id' });
+                alert("製剤一覧が空です。設定シートで設定をしてください")
             }
         };
-    }
 
-    // 最後の入力値を保存
-    function saveLastInputValues(height, weight) {
-        const transaction = db.transaction([STORE_NAME], 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadLastInputValues();
+            getPack();
+        };
 
-        store.put({
-            id: 'lastInput',
-            height: height,
-            weight: weight,
-        });
-    }
+        // 最後の入力値を読み込む
+        function loadLastInputValues() {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get('lastInput');
 
-    function savePacInputValues(pacID, volume) {
-        const transaction = db.transaction([DATA_STORE], 'readwrite');
-        const store = transaction.objectStore(DATA_STORE);
-        // membersオブジェクトストアからfooさんのレコードをフェッチ
-        store.openCursor().onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (cursor.value.id === pacID)
-                    cursor.value.volume = volume;
-                cursor.update(cursor.value);
-                cursor.continue();
+            request.onsuccess = () => {
+                if (request.result) {
+                    document.getElementById('height').value = request.result.height || 0;
+                    document.getElementById('weight').value = request.result.weight || 0;
+                    calculateNeed();
+                }
+            };
+        }
+
+        // 最後の入力値を保存
+        function saveLastInputValues(height, weight) {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+
+            store.put({
+                id: 'lastInput',
+                height: height,
+                weight: weight,
+            });
+        }
+
+        function savePacInputValues(pacID, volume) {
+            const transaction = db.transaction([DATA_STORE], 'readwrite');
+            const store = transaction.objectStore(DATA_STORE);
+            // membersオブジェクトストアからfooさんのレコードをフェッチ
+            store.openCursor().onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    if (cursor.value.id === pacID)
+                        cursor.value.volume = volume;
+                    cursor.update(cursor.value);
+                    cursor.continue();
+                }
             }
         }
-    }
 
-    function calculateNeed() {
-        const height = parseFloat(document.getElementById('height').value);
-        const weight = parseFloat(document.getElementById('weight').value) || 0;
+        function calculateNeed() {
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
 
-        if (height) {
-            const heightInMeters = height / 100;
-            const bmi = weight / (heightInMeters * heightInMeters);
-            const water = weight * 30; //30～40
-            const calMin = weight * 25;
-            const calMax = weight * 30; //体重*25～30 高齢女性にはHarris-Benedictは多めにでます(静脈栄養ガイドライン第3版)
-            const pMin = weight * 0.9;
-            const pMax = weight * 1.6;
-            document.getElementById('resultText').textContent = `BMI: ${bmi.toFixed(1)}`;
-            document.getElementById('needWater').textContent = `${water}ml`;
-            document.getElementById('needCal').textContent = `${calMin}～${calMax}kcal`;
-            document.getElementById('needP').textContent = `${pMin}g/${pMax}g`;
+            if (height) {
+                const heightInMeters = height / 100;
+                const bmi = weight / (heightInMeters * heightInMeters);
+                const water = weight * 30; //30～40
+                const calMin = weight * 25;
+                const calMax = weight * 30; //体重*25～30 高齢女性にはHarris-Benedictは多めにでます(静脈栄養ガイドライン第3版)
+                const pMin = weight * 0.9;
+                const pMax = weight * 1.6;
+                document.getElementById('resultText').textContent = `BMI: ${bmi.toFixed(1)}`;
+                document.getElementById('needWater').textContent = `${water}ml`;
+                document.getElementById('needCal').textContent = `${calMin}～${calMax}kcal`;
+                document.getElementById('needP').textContent = `${pMin}g/${pMax}g`;
 
-            // 入力値を保存
-            saveLastInputValues(height, weight);
+                // 入力値を保存
+                saveLastInputValues(height, weight);
+            }
         }
-    }
 
-    //製剤を読み込む
-    function getPack() {
-        const transaction = db.transaction([DATA_STORE], 'readonly');
-        const store = transaction.objectStore(DATA_STORE);
-        const request = store.getAll();
+        //製剤を読み込む
+        function getPack() {
+            const transaction = db.transaction([DATA_STORE], 'readonly');
+            const store = transaction.objectStore(DATA_STORE);
+            const request = store.getAll();
 
-        request.onsuccess = () => {
-            const records = request.result;
-            pacArray = records;
-            const tbody = document.getElementById('pacBody');
-            tbody.innerHTML = '';
+            request.onsuccess = () => {
+                const records = request.result;
+                pacArray = records;
+                const tbody = document.getElementById('pacBody');
+                tbody.innerHTML = '';
 
-            records.sort((a, b) => a.id - b.id)
-                .forEach(record => {
-                    const row = tbody.insertRow();
-                    row.insertCell().innerHTML = `<div class="resID">${record.id}</div>`;
-                    row.insertCell().textContent = record.name;
-                    row.insertCell().textContent = record.pack;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue" value="${record.volume}">ml`;
-                });
+                records.sort((a, b) => a.id - b.id)
+                    .forEach(record => {
+                        const row = tbody.insertRow();
+                        row.insertCell().innerHTML = `<div class="resID">${record.id}</div>`;
+                        row.insertCell().textContent = record.name;
+                        row.insertCell().textContent = record.pack;
+                        row.insertCell().innerHTML = `<input type="number" class="pacValue" value="${record.volume}">ml`;
+                    });
+                document.getElementById('pacTable').querySelectorAll('.pacValue')
+                    .forEach(pacVal => {
+                        pacVal.addEventListener('input', inputVolume);
+                    });
+                document.getElementById('pacTable').querySelector('.pacValue').dispatchEvent(new Event('input'));
+            };
+
+        }
+
+        function inputVolume() {
+            const inputID = this.parentNode.parentNode.querySelector('.resID').textContent;
+            const vol = parseFloat(this.value);
+            pacArray[inputID].volume = vol;
+            savePacInputValues(inputID, vol);
+            calcCals();
+        }
+
+        function calcCals() {
+            let water = 0;
+            let kcal = 0;
+            let prot = 0;
+            let glu = 0;
+            let huRmin = 0;
+            let huRmax = 0;
+            let totalVol = 0;
+            let multOSM = 0;
+            let na = 0;
+            let k = 0;
+            pacArray.forEach(record => {
+                const vol = parseFloat(record.volume);
+                const uVol = vol / unitVolume;
+                if (record.osmratio) {
+                    totalVol = totalVol + vol;
+                    multOSM = multOSM + (vol * parseInt(record.osmratio));
+                }
+                water = water + record.water * uVol;
+                kcal = kcal + record.totalCal * uVol;
+                prot = prot + record.protein * uVol;
+                glu = glu + record.glu * uVol;
+                na = na + record.na * uVol;
+                k = k + record.k * uVol;
+                huRmin = glu / 10;
+                huRmax = glu / 5;
+
+            });
+            const npcn = (kcal - prot * 4) / prot * 25 / 4;// NPC/N=NPC/(タンパク質量g/6.25(=25/4))
+            const osm = multOSM / totalVol;
+            const meqNa = na / 23;
+            const meqK = k / 39;
+            const nacl = na * 58.5 / 23 / 1000; //食塩：58.5 ナトリウム23
+            document.getElementById('calcWater').textContent = `${water.toFixed(0)}ml`;
+            document.getElementById('calcCal').textContent = `${kcal.toFixed(0)}kcal`;
+            document.getElementById('calcP').textContent = `${prot.toFixed(0)}g`;
+            document.getElementById('calcOSM').textContent = `${osm.toFixed(1)}`;
+            document.getElementById('calcGlu').innerHTML = `${glu.toFixed(0)}g<br>(${huRmin.toFixed(0)}-${huRmax.toFixed(0)}U)`;
+            document.getElementById('calcNPCN').textContent = `${npcn.toFixed(1)}`;
+            document.getElementById('calcTVol').textContent = `${totalVol}ml`;
+            document.getElementById('calcNa').innerHTML = `${meqNa.toFixed(0)}mEq<br>${na.toFixed(0)}mg`;
+            document.getElementById('calcK').innerHTML = `${meqK.toFixed(0)}mEq<br>${k.toFixed(0)}mg`;
+            document.getElementById('calcNaCl').textContent = `${nacl.toFixed(1)}g`;
+        }
+
+        function clearVolumes() {
+            //すべてのinputを0にして、inputイベント=inputVolume()を呼ぶと各idでvolumeを0でupdateすることになる
             document.getElementById('pacTable').querySelectorAll('.pacValue')
                 .forEach(pacVal => {
-                    pacVal.addEventListener('input', inputVolume);
+                    pacVal.value = 0;
+                    pacVal.dispatchEvent(new Event('input'));
                 });
-            document.getElementById('pacTable').querySelector('.pacValue').dispatchEvent(new Event('input'));
-        };
+        }
 
-    }
-
-    function inputVolume() {
-        const inputID = this.parentNode.parentNode.querySelector('.resID').textContent;
-        const vol = parseFloat(this.value);
-        pacArray[inputID].volume = vol;
-        savePacInputValues(inputID, vol);
-        calcCals();
-    }
-
-    function calcCals() {
-        let water = 0;
-        let kcal = 0;
-        let prot = 0;
-        let glu = 0;
-        let huRmin = 0;
-        let huRmax = 0;
-        let totalVol = 0;
-        let multOSM = 0;
-        let na = 0;
-        let k = 0;
-        pacArray.forEach(record => {
-            const vol = parseFloat(record.volume);
-            const uVol = vol / unitVolume;
-            if (record.osmratio) {
-                totalVol = totalVol + vol;
-                multOSM = multOSM + (vol * parseInt(record.osmratio));
-            }
-            water = water + record.water * uVol;
-            kcal = kcal + record.totalCal * uVol;
-            prot = prot + record.protein * uVol;
-            glu = glu + record.glu * uVol;
-            na = na + record.na * uVol;
-            k = k + record.k * uVol;
-            huRmin = glu / 10;
-            huRmax = glu / 5;
-
-        });
-        const npcn = (kcal - prot * 4) / prot * 25 / 4;// NPC/N=NPC/(タンパク質量g/6.25(=25/4))
-        const osm = multOSM / totalVol;
-        const meqNa = na / 23;
-        const meqK = k / 39;
-        const nacl = na * 58.5 / 23 / 1000; //食塩：58.5 ナトリウム23
-        document.getElementById('calcWater').textContent = `${water.toFixed(0)}ml`;
-        document.getElementById('calcCal').textContent = `${kcal.toFixed(0)}kcal`;
-        document.getElementById('calcP').textContent = `${prot.toFixed(0)}g`;
-        document.getElementById('calcOSM').textContent = `${osm.toFixed(1)}`;
-        document.getElementById('calcGlu').textContent = `${glu.toFixed(0)}g(${huRmin.toFixed(0)}-${huRmax.toFixed(0)}U)`;
-        document.getElementById('calcNPCN').textContent = `${npcn.toFixed(1)}`;
-        document.getElementById('calcTVol').textContent = `${totalVol}ml`;
-        document.getElementById('calcNa').textContent = `${meqNa.toFixed(0)}mEq/${na.toFixed(0)}mg`;
-        document.getElementById('calcK').textContent = `${meqK.toFixed(0)}mEq/${k.toFixed(0)}mg`;
-        document.getElementById('calcNaCl').textContent = `${nacl.toFixed(1)}g`;
-    }
-
-    function clearVolumes() {
-        //すべてのinputを0にして、inputイベント=inputVolume()を呼ぶと各idでvolumeを0でupdateすることになる
-        document.getElementById('pacTable').querySelectorAll('.pacValue')
-            .forEach(pacVal => {
-                pacVal.value = 0;
-                pacVal.dispatchEvent(new Event('input'));
-            });
-    }
-
-    // イベントリスナーを設定
-    document.getElementById('height').addEventListener('input', calculateNeed);
-    document.getElementById('weight').addEventListener('input', calculateNeed);
-</script>
+        // イベントリスナーを設定
+        document.getElementById('height').addEventListener('input', calculateNeed);
+        document.getElementById('weight').addEventListener('input', calculateNeed);
+    </script>
 </body>
 
 </html>
