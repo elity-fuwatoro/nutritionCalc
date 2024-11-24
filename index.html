@@ -199,6 +199,7 @@
     const DB_NAME = 'NutDatabase';
     const STORE_NAME = 'inputBackUp';
     const DATA_STORE = 'NutLists';
+    const identColor = 'palegreen';
 
     // データベースを初期化
     const request = indexedDB.open(DB_NAME, 1);
@@ -254,13 +255,13 @@
     function savePacInputValues(pacID, volume) {
         const transaction = db.transaction([DATA_STORE], 'readwrite');
         const store = transaction.objectStore(DATA_STORE);
-        // membersオブジェクトストアからfooさんのレコードをフェッチ
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                if (cursor.value.id === pacID)
+                if (parseInt(cursor.value.id) === parseInt(pacID)) {
                     cursor.value.volume = volume;
-                cursor.update(cursor.value);
+                    cursor.update(cursor.value);
+                }
                 cursor.continue();
             }
         }
@@ -284,7 +285,7 @@
                 const bmi = weight / (heightInMeters * heightInMeters);
                 const idealWeight = heightInMeters * heightInMeters * 22;
                 const idealWeightElder = heightInMeters * heightInMeters * 25;
-                document.getElementById('resultText').innerHTML = `BMI: ${bmi.toFixed(1)} <br> 標準体重(22-25): ${idealWeight.toFixed(1)}～${idealWeightElder.toFixed(1)}kg(65歳以上)`;
+                document.getElementById('resultText').innerHTML = `BMI: ${bmi.toFixed(1)} <br> 標準体重(22-25): ${idealWeight.toFixed(1)}-${idealWeightElder.toFixed(1)}kg(65歳以上)`;
                 // 入力値を保存
                 saveLastInputValues(height, weight);
             } else {
@@ -311,7 +312,12 @@
                     row.insertCell().innerHTML = `<div class="resID">${record.id}</div>`;
                     row.insertCell().textContent = record.name;
                     row.insertCell().textContent = record.pack;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue" value="${record.volume}">ml`;
+                    let volCell = row.insertCell();
+                    const vol = record.volume;
+                    if (vol !== 0) {
+                        volCell.style.backgroundColor = identColor;
+                    }
+                    volCell.innerHTML = `<input type="number" class="pacValue" value="${vol}">ml`;
                 });
             document.getElementById('pacTable').querySelectorAll('.pacValue')
                 .forEach(pacVal => {
@@ -325,6 +331,11 @@
     function inputVolume() {
         const inputID = this.parentNode.parentNode.querySelector('.resID').textContent;
         const vol = parseFloat(this.value);
+        if (vol === 0) {
+            this.parentNode.style.backgroundColor = "";
+        } else {
+            this.parentNode.style.backgroundColor = identColor;
+        }
         pacArray[inputID].volume = vol;
         savePacInputValues(inputID, vol);
         calcCals();
