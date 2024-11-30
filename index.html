@@ -89,7 +89,7 @@
             max-width: fit-content;
             margin: 0 auto;
             padding: 2vh;
-            background-color: rgba(240, 240, 240, 0.5);
+            background-color: rgb(240, 240, 240);
             border-radius: 5px;
         }
     </style>
@@ -152,7 +152,7 @@
     </div>
 </div>
 <footer class="footer">
-    <div>栄養：</div>
+    <div id="chartLink">栄養：</div>
     <div id="calcNut">
         <table>
             <tbody>
@@ -398,6 +398,7 @@
         document.getElementById('calcNa').innerHTML = `${meqNa.toFixed(0)}mEq<br>${na.toFixed(0)}mg`;
         document.getElementById('calcK').innerHTML = `${meqK.toFixed(0)}mEq<br>${k.toFixed(0)}mg`;
         document.getElementById('calcNaCl').textContent = `${nacl.toFixed(1)}g`;
+        document.getElementById('chartLink').innerHTML = `<a href="chart.html?carbs=${glu}&fat=${fat}&protein=${prot}" target="_blank">栄養：(タップでチャート表示)</a>`;
     }
 
     function clearVolumes() {
