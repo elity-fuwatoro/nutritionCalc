@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>栄養成分チャート</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #chartContainer {
+            width: 80vh;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chartContainer">
+        <canvas id="nutritionChart"></canvas>
+    </div>
+
+    <script>
+        // URLからパラメーターを取得する関数
+        // 書式：?carbs=155&fat=40&protein=40
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                carbs: Number(params.get('carbs') || '0'),
+                fat: Number(params.get('fat') || '0'),
+                protein: Number(params.get('protein') || '0')
+            };
+        }
+
+        // カロリー計算関数
+        function calculateCalories(nutrients) {
+            return {
+                carbs: nutrients.carbs * 4,  // 炭水化物1gあたり4kcal
+                fat: nutrients.fat * 9,      // 脂質1gあたり9kcal
+                protein: nutrients.protein * 4  // タンパク質1gあたり4kcal
+            };
+        }
+
+        // チャート作成関数
+        function createNutritionChart(calories) {
+            const totalCalories = calories.carbs + calories.fat + calories.protein;
+
+            new Chart(document.getElementById('nutritionChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['炭水化物', '脂質', 'タンパク質'],
+                    datasets: [{
+                        data: [
+                            calories.carbs,
+                            calories.fat,
+                            calories.protein
+                        ],
+                        backgroundColor: [
+                            '#36A2EB',  // 青 (炭水化物)
+                            '#FFCE56',   // 黄色 (脂質)
+                            '#FF6384'  // ピンク (タンパク質)
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `総カロリー: ${totalCalories.toFixed(0)} kcal`
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.parsed;
+                                    const percentage = ((value / totalCalories) * 100).toFixed(1);
+                                    return `${value.toFixed(0)} kcal (${percentage}%)`;
+                                }
+                            }
+                        },
+                        centerText: {
+                            display: true,
+                            text: `総カロリー\n${totalCalories.toFixed(0)} kcal`
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'centerText',
+                    beforeDraw: function (chart) {
+                        const width = chart.width;
+                        const height = chart.height;
+                        const ctx = chart.ctx;
+
+                        ctx.restore();
+                        const fontSize = (height / 400).toFixed(2);
+                        ctx.font = fontSize + 'em sans-serif';
+                        ctx.textBaseline = 'middle';
+
+                        const text = `総カロリー:${totalCalories.toFixed(0)}kcal`;
+                        const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                        const textY = Math.round(height / 2);
+
+                        ctx.fillStyle = 'black';
+
+                        // テキストを複数行で描画
+                        const lines = text.split('\n');
+                        const lineHeight = fontSize * 20;
+
+                        lines.forEach((line, index) => {
+                            ctx.fillText(line, textX, textY + (index * lineHeight));
+                        });
+
+                        ctx.save();
+                    }
+                }]
+            });
+        }
+
+        // ページ読み込み時に実行
+        window.onload = function () {
+            const nutrients = getUrlParams();
+            const calories = calculateCalories(nutrients);
+            createNutritionChart(calories);
+        };
+    </script>
+</body>
+
+</html>
