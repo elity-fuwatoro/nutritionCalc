@@ -41,7 +41,7 @@
         }
 
         .container {
-            height: 90vh;
+            height: 80vh;
         }
 
         .tableContainer {
@@ -109,7 +109,7 @@
 <div class="container">
     <h2>設定画面</h2>
     <button onclick="location.href='index.html'">計算シートに戻る</button>
-    <p>1000ccあたりのデータを記載して下さい(そうしないと製剤ごとにパック量が異なり計算困難となるため)<br>糖質はHu-Rの計算で用いるのみで、ブドウ糖量を記載(食物繊維などの糖質は入れていません)<br>アミノ酸製剤はタンパク質=総遊離アミノ酸量(蛋白と総Calより計算で出しているのですがなぜかNPC/Nが少しずれます)<br>電解質は内部的にはmgで保持。経腸栄養でなければmEqに変換して表示(そのため入力時数値がずれるので気になる方はふっかつのじゅもんからmgを直接入力してください)
+    <p>1000ccあたりのデータを記載して下さい(製剤ごとにパック量が異なり計算困難のため)<br>糖質はHu-Rの計算で用いるのでブドウ糖量を記載(食物繊維などの糖質は入れず)<br>アミノ酸製剤はタンパク質=総遊離アミノ酸量(蛋白と総Calより計算で出しているがなぜかNPC/Nが少しずれる)<br>電解質は内部的にはmgで保持。経腸栄養でなければmEqに変換して表示(点滴製剤は入力時数値がずれるので、気になる方はふっかつのじゅもんからmgを直接入力)
     </p>
     <p>
         <button onclick="showModalDialog()">ふっかつのじゅもんを表示/編集</button>
@@ -123,6 +123,9 @@
             <button value="cancel">閉じる</button>
             <button value="submit">ふっかつする</button>
         </form>
+        <button onclick="document.getElementById('restore').value='';" style="margin-top: 5px">
+            呪文クリア(閉じればまた復活します)
+        </button>
         <label for="restore"></label><textarea id="restore">読込中・・・
                         </textarea>
     </dialog>
