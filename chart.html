@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>栄養成分チャート</title>
+    <title>PFCチャート</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -79,29 +79,11 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: `総カロリー: ${totalCalories.toFixed(0)} kcal`
+                        text: `蛋白：0.8～1g/日/kg. 脂質：20～40%. 糖質50～60%(静脈経腸栄養ガイドライン 第3版 2014)`
                     },
                     tooltip: {
                         enabled: false
-                        // titleFont: {
-                        //     size: 20
-                        // },
-                        // bodyFont: {
-                        //     size: 20
-                        // },
-                        // callbacks: {
-                        //     label: function (context) {
-                        //         const value = context.parsed;
-                        //         const percentage = ((value / totalCalories) * 100).toFixed(1);
-                        //         return `${percentage}% (${value.toFixed(0)} kcal)`;
-                        //     }
-                        //
-                        // }
                     },
-                    // centerText: {
-                    //     display: true,
-                    //     text: `総カロリー\n${totalCalories.toFixed(0)} kcal`
-                    // }
                 }
             },
             plugins: [{
@@ -134,11 +116,11 @@
                     ctx.save();
                 },
                 afterDraw(chart, go) {
-                    let ctx = chart.ctx;
+                    const ctx = chart.ctx;
                     chart.data.datasets.forEach((dataset, i) => {
 
 
-                        let meta = chart.getDatasetMeta(i);
+                        const meta = chart.getDatasetMeta(i);
                         if (!meta.hidden) {
                             meta.data.forEach(function (element, index) {
                                 // フォントの設定
@@ -151,7 +133,7 @@
                                 const isHidden = dataset.data[index] !== 0;
                                 // ラベルをパーセント表示に変更
                                 let labelString = isHidden ? chart.data.labels[index] : '';
-                                let dataString = isHidden ?`${(Math.round(dataset.data[index] / totalCalories * 100)).toString()}%` : '';
+                                let dataString = isHidden ? `${(Math.round(dataset.data[index] / totalCalories * 100)).toString()}%` : '';
                                 const calString = isHidden ? `${dataset.data[index].toFixed(0)}kcal` : '';
 
                                 // positionの設定
@@ -162,7 +144,7 @@
                                 let position = element.tooltipPosition();
                                 // ツールチップに変更内容を表示
                                 ctx.fillText(labelString, position.x, position.y - (fontSize) - padding);// title
-                                ctx.fillText(dataString, position.x, position.y  - padding); // データの百分率
+                                ctx.fillText(dataString, position.x, position.y - padding); // データの百分率
                                 ctx.fillText(calString, position.x, position.y + (fontSize) - padding); // データの百分率
 
                                 // 凡例の位置調整
