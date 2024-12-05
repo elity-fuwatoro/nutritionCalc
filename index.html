@@ -291,7 +291,7 @@
                 const bmi = weight / (heightInMeters * heightInMeters);
                 const idealWeight = heightInMeters * heightInMeters * 22;
                 const idealWeightElder = heightInMeters * heightInMeters * 25;
-                document.getElementById('resultText').innerHTML = `BMI: ${bmi.toFixed(1)} <br> 標準体重(22-25): ${idealWeight.toFixed(1)}-${idealWeightElder.toFixed(1)}kg(65歳以上)`;
+                document.getElementById('resultText').innerHTML = `BMI: ${bmi.toFixed(1)} <br> 標準体重(BMI22-25):${idealWeight.toFixed(1)}(-${idealWeightElder.toFixed(1)}kg:>65歳)`;
                 // 入力値を保存
                 saveLastInputValues(height, weight);
             } else {
