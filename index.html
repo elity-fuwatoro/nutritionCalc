@@ -291,7 +291,13 @@
                 const bmi = weight / (heightInMeters * heightInMeters);
                 const idealWeight = heightInMeters * heightInMeters * 22;
                 const idealWeightElder = heightInMeters * heightInMeters * 25;
-                document.getElementById('resultText').innerHTML = `BMI: ${bmi.toFixed(1)} <br> 標準体重(BMI22-25):${idealWeight.toFixed(1)}(-${idealWeightElder.toFixed(1)}kg:>65歳)`;
+                let color = 'initial'; //日本肥満学会：18.5以下やせ　25以上肥満
+                if (bmi > 25) {
+                    color = 'red';
+                } else if (bmi < 18.5) {
+                    color = 'blue';
+                }
+                document.getElementById('resultText').innerHTML = `<span style="color: ${color}">BMI: ${bmi.toFixed(1)}</span> <br> ↓標準体重:BMI 22 (～25:>65歳) <br>${idealWeight.toFixed(1)}kg (～${idealWeightElder.toFixed(1)}kg)`;
                 // 入力値を保存
                 saveLastInputValues(height, weight);
             } else {
