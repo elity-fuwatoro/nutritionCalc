@@ -52,7 +52,6 @@
         }
 
         table {
-            /*table-layout: fixed;*/
             height: auto;
             width: auto;
             border-collapse: collapse;
@@ -92,7 +91,6 @@
             box-sizing: border-box;
             width: 100%;
             height: calc(100% - 200px);
-            /* UIが増えた分、高さを調整 */
             background: #ddd;
             padding: 0.5em;
             color: #222;
@@ -120,413 +118,382 @@
 </head>
 
 <body>
-    <div class="container">
-        <h2>設定画面</h2>
-        <button onclick="location.href='index.html'">計算シートに戻る</button>
-        <p>1000ccあたりのデータを記載して下さい(製剤ごとにパック量が異なり計算困難のため)<br>糖質はHu-Rの計算で用いるのでブドウ糖量を記載(食物繊維などの糖質は入れず)<br>アミノ酸製剤はタンパク質=総遊離アミノ酸量(蛋白と総Calより計算で出しているがなぜかNPC/Nが少しずれる)<br>電解質は内部的にはmgで保持。経腸栄養でなければmEqに変換して表示(点滴製剤は入力時数値がずれるので、気になる方はふっかつのじゅもんからmgを直接入力)
-        </p>
-        <p>
-            <button onclick="showModalDialog()">ふっかつのじゅもんを表示/編集</button>
-            <button onclick="initializePac()">製剤一覧をデモデータに</button>
-        </p>
-        <p>
-            <button onclick="showHide();">表示量少なく(押すたびに切り替え/iphone非対応)</button>
-        </p>
-        <dialog id="DIALOG" onclose="closeDialog(this);">
-            <form method="dialog" id="dialog-form">
-                <button value="cancel" onclick="stopQrScanning()">閉じる</button>
-                <button value="submit">ふっかつする</button>
-            </form>
-            <button onclick="document.getElementById('restore').value='';" style="margin-top: 5px">
-                呪文クリア
-            </button>
-            <button type="button" onclick="generateQRCodes()" style="margin-top: 5px">QRコード生成</button>
-            <button type="button" onclick="startQrScanning()" style="margin-top: 5px">QR読み取り</button>
-            <button type="button" id="stop-scan-btn" onclick="stopQrScanning()"
-                style="margin-top: 5px; display: none;">スキャン停止</button>
+<div class="container">
+    <h2>設定画面</h2>
+    <button onclick="location.href='index.html'">計算シートに戻る</button>
+    <p>1000ccあたりのデータを記載して下さい(製剤ごとにパック量が異なり計算困難のため)<br>糖質はHu-Rの計算で用いるのでブドウ糖量を記載(食物繊維などの糖質は入れず)<br>アミノ酸製剤はタンパク質=総遊離アミノ酸量(蛋白と総Calより計算で出しているがなぜかNPC/Nが少しずれる)<br>電解質は内部的にはmgで保持。経腸栄養でなければmEqに変換して表示(点滴製剤は入力時数値がずれるので、気になる方はふっかつのじゅもんからmgを直接入力)
+    </p>
+    <p>
+        <button onclick="showModalDialog()">ふっかつのじゅもんを表示/編集</button>
+        <button onclick="initializePac()">製剤一覧をデモデータに</button>
+    </p>
+    <p>
+        <button onclick="showHide();">表示量少なく(押すたびに切り替え/iphone非対応)</button>
+    </p>
+    <dialog id="DIALOG" onclose="closeDialog(this);">
+        <form method="dialog" id="dialog-form">
+            <button value="cancel" onclick="stopQrScanning()">閉じる</button>
+            <button value="submit">ふっかつする</button>
+        </form>
+        <button onclick="document.getElementById('restore').value='';" style="margin-top: 5px">
+            呪文クリア
+        </button>
+        <button type="button" onclick="generateQRCodes()" style="margin-top: 5px">QRコード生成</button>
+        
+        <button type="button" onclick="startScan({ facingMode: 'environment' })" style="margin-top: 5px">背面QRスキャン</button>
+        <button type="button" onclick="startScan({ facingMode: 'user' })" style="margin-top: 5px">前面QRスキャン</button>
+        <button type="button" id="stop-scan-btn" onclick="stopQrScanning()" style="margin-top: 5px; display: none;">QRスキャン停止</button>
+        
+        <p id="scan-status" style="color: white; margin: 5px 0 0 0;"></p>
+        <video id="video-preview" playsinline></video>
 
-            <p id="scan-status" style="color: white; margin: 5px 0 0 0;"></p>
-            <video id="video-preview"></video>
+        <div id="qrcode-container"></div>
 
-            <div id="qrcode-container"></div>
-
-            <label for="restore"></label><textarea id="restore">読込中・・・</textarea>
-        </dialog>
-        <div class="tableContainer">
-            <table id="pacTable">
-                <colgroup>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
-                    <col class="input-nut">
-                    <col class="input-nut">
-                    <col class="input-nut">
-                    <col class="input-nut">
-                    <col class="input-nut">
-                    <col class="input-vit">
-                    <col class="input-vit">
-                    <col class="input-vit">
-                    <col class="input-vit">
-                    <col class="input-vit">
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th>削除</th>
-                        <th>id</th>
-                        <th>経腸</th>
-                        <th class="fixedName">製剤名</th>
-                        <th>総Cal</th>
-                        <th>水分</th>
-                        <th>蛋白</th>
-                        <th>糖質</th>
-                        <th>脂質</th>
-                        <th>1pac量</th>
-                        <th>1タップ量</th>
-                        <th>Na</th>
-                        <th>K</th>
-                        <th>浸透圧比</th>
-                    </tr>
-                </thead>
-                <tbody id="pacBody"></tbody>
-            </table>
-        </div>
+        <label for="restore"></label><textarea id="restore">読込中・・・</textarea>
+    </dialog>
+    <div class="tableContainer">
+        <table id="pacTable">
+            <colgroup>
+                <col><col><col><col>
+                <col class="input-nut"><col class="input-nut"><col class="input-nut"><col class="input-nut"><col class="input-nut">
+                <col class="input-vit"><col class="input-vit"><col class="input-vit"><col class="input-vit"><col class="input-vit">
+            </colgroup>
+            <thead>
+            <tr>
+                <th>削除</th><th>id</th><th>経腸</th><th class="fixedName">製剤名</th>
+                <th>総Cal</th><th>水分</th><th>蛋白</th><th>糖質</th><th>脂質</th>
+                <th>1pac量</th><th>1タップ量</th><th>Na</th><th>K</th><th>浸透圧比</th>
+            </tr>
+            </thead>
+            <tbody id="pacBody"></tbody>
+        </table>
     </div>
-    <script>
-        let db;
-        const DB_NAME = 'NutDatabase';
-        const STORE_NAME = 'inputBackUp';
-        const DATA_STORE = 'NutLists';
-        const hukkatsu = '[{"id":0,"name":"ビーフリード","pack":"500ml","tapVol":500,"volume":0,"totalCal":420,"water":1000,"protein":30,"glu":75,"fat":0,"osmratio":3,"na":805,"k":780},{"id":1,"name":"アミパレン","pack":"200/300ml","tapVol":200,"volume":0,"totalCal":400,"water":1000,"protein":100,"glu":0,"fat":0,"osmratio":3,"na":46,"k":0},{"id":2,"name":"キドミン","pack":"200/300ml","tapVol":200,"volume":0,"totalCal":288,"water":1000,"protein":72,"glu":0,"fat":0,"osmratio":2,"na":46,"k":0},{"id":3,"name":"フルカリック1","pack":"903ml","tapVol":903,"volume":0,"totalCal":620,"water":1000,"protein":21,"glu":132.9,"fat":0,"osmratio":4,"na":1265,"k":1287},{"id":4,"name":"フルカリック2","pack":"1003ml","tapVol":1003,"volume":0,"totalCal":817.5,"water":1000,"protein":30,"glu":174.5,"fat":0,"osmratio":5,"na":1150,"k":1170},{"id":5,"name":"フルカリック3","pack":"1103ml","tapVol":1103,"volume":0,"totalCal":1051.7,"water":1000,"protein":36,"glu":226.7,"fat":0,"osmratio":6,"na":1035,"k":1053},{"id":6,"name":"エルネオパ1","pack":"1L","tapVol":1000,"volume":0,"totalCal":560,"water":1000,"protein":20.13,"glu":120,"fat":0,"osmratio":4,"na":1150,"k":858},{"id":7,"name":"エルネオパ2","pack":"1L/1.5L","tapVol":1000,"volume":0,"totalCal":820,"water":1000,"protein":30,"glu":175,"fat":0,"osmratio":6,"na":1150,"k":1053},{"id":8,"name":"トリフリード","pack":"1L","tapVol":1000,"volume":0,"totalCal":420,"water":1000,"protein":0,"glu":60,"fat":0,"osmratio":3,"na":805,"k":780},{"id":9,"name":"生食","pack":"500ml/1L","tapVol":500,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":1,"na":3538.46,"k":0},{"id":10,"name":"10%食塩水","pack":"20ml/1A","tapVol":20,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":11,"na":39316.24,"k":0},{"id":11,"name":"ソルアセトF","pack":"500ml","tapVol":500,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":1,"na":3013,"k":156},{"id":12,"name":"ソルアセトD","pack":"500ml","tapVol":500,"volume":0,"totalCal":200,"water":1000,"protein":0,"glu":50,"fat":0,"osmratio":2,"na":3013,"k":156},{"id":13,"name":"ソリタT1","pack":"200/500ml","tapVol":500,"volume":0,"totalCal":104,"water":1000,"protein":0,"glu":26,"fat":0,"osmratio":1,"na":2070,"k":0},{"id":14,"name":"ソルデム3A","pack":"500ml","tapVol":500,"volume":0,"totalCal":172,"water":1000,"protein":0,"glu":43,"fat":0,"osmratio":1,"na":805,"k":780},{"id":15,"name":"ソルデム3AG","pack":"200/500ml","tapVol":500,"volume":0,"totalCal":300,"water":1000,"protein":0,"glu":75,"fat":0,"osmratio":2,"na":805,"k":780},{"id":16,"name":"ソルデム6","pack":"500ml","tapVol":500,"volume":0,"totalCal":160,"water":1000,"protein":0,"glu":40,"fat":0,"osmratio":1,"na":690,"k":0},{"id":17,"name":"5%ブドウ糖液","pack":"20/250/500ml","tapVol":250,"volume":0,"totalCal":200,"water":1000,"protein":0,"glu":50,"fat":0,"osmratio":1,"na":0,"k":0},{"id":18,"name":"10%ブドウ糖液","pack":"500ml","tapVol":500,"volume":0,"totalCal":400,"water":1000,"protein":0,"glu":100,"fat":0,"osmratio":2,"na":0,"k":0},{"id":19,"name":"50%ブドウ糖液","pack":"20/200ml","tapVol":20,"volume":0,"totalCal":2000,"water":1000,"protein":0,"glu":500,"fat":0,"osmratio":12,"na":0,"k":0},{"id":20,"name":"ｲﾝﾄﾗﾘﾎﾟｽ20%","pack":"100/250ml","tapVol":250,"volume":0,"totalCal":2000,"water":1000,"protein":0,"glu":0,"fat":222.2,"osmratio":1,"na":0,"k":0},{"id":21,"name":"KCL注","pack":"20mEq/20ml","tapVol":20,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":6,"na":0,"k":39000},{"id":22,"name":"白湯","pack":"","tapVol":0,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":null,"na":0,"k":0},{"id":23,"name":"エネーボ","pack":"250ml/缶","tapVol":250,"volume":0,"totalCal":1200,"water":812,"protein":54,"glu":158.4,"fat":38.4,"osmratio":null,"na":920,"k":1200},{"id":24,"name":"エンシュアH","pack":"250ml/缶","tapVol":250,"volume":0,"totalCal":1500,"water":776,"protein":52.8,"glu":206,"fat":52.8,"osmratio":null,"na":1200,"k":2240},{"id":25,"name":"ｴﾝｼｭｱﾘｷｯﾄﾞ","pack":"250ml","tapVol":250,"volume":0,"totalCal":1000,"water":852,"protein":35.2,"glu":137.2,"fat":0,"osmratio":null,"na":800,"k":1480},{"id":26,"name":"イノラス","pack":"187.5ml","tapVol":187.5,"volume":0,"totalCal":1600,"water":744,"protein":64,"glu":212.24,"fat":51.52,"osmratio":null,"na":1440,"k":2944},{"id":27,"name":"エレンタール","pack":"80g/包","tapVol":80,"volume":0,"totalCal":3750,"water":0,"protein":164,"glu":793,"fat":6.375,"osmratio":null,"na":3250,"k":2720},{"id":28,"name":"ラコールNF","pack":"200ml","tapVol":200,"volume":0,"totalCal":1000,"water":850,"protein":44,"glu":156.2,"fat":22.5,"osmratio":null,"na":738,"k":1380},{"id":29,"name":"ラコール半固形","pack":"300g","tapVol":300,"volume":0,"totalCal":1000,"water":760,"protein":43.8,"glu":156.2,"fat":22.3,"osmratio":null,"na":738,"k":1380},{"id":30,"name":"ﾊｲﾈｯｸｽｾﾞﾘｰ","pack":"300g","tapVol":300,"volume":0,"totalCal":1000,"water":760,"protein":45,"glu":131.6,"fat":27.7,"osmratio":null,"na":1770,"k":1840},{"id":31,"name":"ﾊｲﾈｯｸｽｲｰｹﾞﾙ","pack":"500ml","tapVol":500,"volume":0,"totalCal":800,"water":880,"protein":32,"glu":123,"fat":17.6,"osmratio":null,"na":1330,"k":1250},{"id":32,"name":"ｱｲｿｶﾙｸﾘｱ","pack":"200ml/本","tapVol":200,"volume":0,"totalCal":1000,"water":830,"protein":50,"glu":200,"fat":0,"osmratio":null,"na":0,"k":0},{"id":33,"name":"ｱｲｿｶﾙｻﾎﾟｰﾄ1.0","pack":"400ml","tapVol":400,"volume":0,"totalCal":1000,"water":840,"protein":45,"glu":135,"fat":28,"osmratio":null,"na":1900,"k":1600},{"id":34,"name":"ｱｲｿｶﾙ2Kneo","pack":"200ml","tapVol":200,"volume":0,"totalCal":2000,"water":700,"protein":60,"glu":239,"fat":85,"osmratio":null,"na":2400,"k":1500},{"id":35,"name":"ﾒｲﾊﾞﾗﾝｽぎゅっとmini","pack":"100ml","tapVol":100,"volume":0,"totalCal":2000,"water":689,"protein":75,"glu":293,"fat":56,"osmratio":null,"na":1300,"k":1800},{"id":36,"name":"ﾘｶﾊﾞﾘｰK5","pack":"330ml/本","tapVol":330,"volume":0,"totalCal":1212,"water":800,"protein":60.6,"glu":158.8,"fat":32.4,"osmratio":null,"na":2000,"k":1636.4},{"id":37,"name":"ﾍﾟﾌﾟﾀﾒﾝｽﾀﾝﾀﾞｰﾄﾞ","pack":"200ml","tapVol":200,"volume":0,"totalCal":1500,"water":765,"protein":52.5,"glu":187.5,"fat":60,"osmratio":null,"na":2145,"k":1600},{"id":38,"name":"ﾍﾟﾌﾟﾀﾒﾝAF","pack":"200ml","tapVol":200,"volume":0,"totalCal":1500,"water":775,"protein":95,"glu":132,"fat":66,"osmratio":null,"na":2630,"k":2320},{"id":39,"name":"ﾘｰﾅﾚﾝMP","pack":"125ml/本","tapVol":125,"volume":0,"totalCal":1600,"water":748.8,"protein":56,"glu":240,"fat":44.8,"osmratio":null,"na":960,"k":480},{"id":40,"name":"ｲﾝｽﾛｰ","pack":"200ml/本","tapVol":200,"volume":0,"totalCal":1000,"water":844,"protein":50,"glu":122,"fat":33,"osmratio":null,"na":1100,"k":1000}]';
+</div>
+<script>
+    let db;
+    const DB_NAME = 'NutDatabase';
+    const STORE_NAME = 'inputBackUp';
+    const DATA_STORE = 'NutLists';
+    const hukkatsu = '[{"id":0,"name":"ビーフリード","pack":"500ml","tapVol":500,"volume":0,"totalCal":420,"water":1000,"protein":30,"glu":75,"fat":0,"osmratio":3,"na":805,"k":780},{"id":1,"name":"アミパレン","pack":"200/300ml","tapVol":200,"volume":0,"totalCal":400,"water":1000,"protein":100,"glu":0,"fat":0,"osmratio":3,"na":46,"k":0},{"id":2,"name":"キドミン","pack":"200/300ml","tapVol":200,"volume":0,"totalCal":288,"water":1000,"protein":72,"glu":0,"fat":0,"osmratio":2,"na":46,"k":0},{"id":3,"name":"フルカリック1","pack":"903ml","tapVol":903,"volume":0,"totalCal":620,"water":1000,"protein":21,"glu":132.9,"fat":0,"osmratio":4,"na":1265,"k":1287},{"id":4,"name":"フルカリック2","pack":"1003ml","tapVol":1003,"volume":0,"totalCal":817.5,"water":1000,"protein":30,"glu":174.5,"fat":0,"osmratio":5,"na":1150,"k":1170},{"id":5,"name":"フルカリック3","pack":"1103ml","tapVol":1103,"volume":0,"totalCal":1051.7,"water":1000,"protein":36,"glu":226.7,"fat":0,"osmratio":6,"na":1035,"k":1053},{"id":6,"name":"エルネオパ1","pack":"1L","tapVol":1000,"volume":0,"totalCal":560,"water":1000,"protein":20.13,"glu":120,"fat":0,"osmratio":4,"na":1150,"k":858},{"id":7,"name":"エルネオパ2","pack":"1L/1.5L","tapVol":1000,"volume":0,"totalCal":820,"water":1000,"protein":30,"glu":175,"fat":0,"osmratio":6,"na":1150,"k":1053},{"id":8,"name":"トリフリード","pack":"1L","tapVol":1000,"volume":0,"totalCal":420,"water":1000,"protein":0,"glu":60,"fat":0,"osmratio":3,"na":805,"k":780},{"id":9,"name":"生食","pack":"500ml/1L","tapVol":500,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":1,"na":3538.46,"k":0},{"id":10,"name":"10%食塩水","pack":"20ml/1A","tapVol":20,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":11,"na":39316.24,"k":0},{"id":11,"name":"ソルアセトF","pack":"500ml","tapVol":500,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":1,"na":3013,"k":156},{"id":12,"name":"ソルアセトD","pack":"500ml","tapVol":500,"volume":0,"totalCal":200,"water":1000,"protein":0,"glu":50,"fat":0,"osmratio":2,"na":3013,"k":156},{"id":13,"name":"ソリタT1","pack":"200/500ml","tapVol":500,"volume":0,"totalCal":104,"water":1000,"protein":0,"glu":26,"fat":0,"osmratio":1,"na":2070,"k":0},{"id":14,"name":"ソルデム3A","pack":"500ml","tapVol":500,"volume":0,"totalCal":172,"water":1000,"protein":0,"glu":43,"fat":0,"osmratio":1,"na":805,"k":780},{"id":15,"name":"ソルデム3AG","pack":"200/500ml","tapVol":500,"volume":0,"totalCal":300,"water":1000,"protein":0,"glu":75,"fat":0,"osmratio":2,"na":805,"k":780},{"id":16,"name":"ソルデム6","pack":"500ml","tapVol":500,"volume":0,"totalCal":160,"water":1000,"protein":0,"glu":40,"fat":0,"osmratio":1,"na":690,"k":0},{"id":17,"name":"5%ブドウ糖液","pack":"20/250/500ml","tapVol":250,"volume":0,"totalCal":200,"water":1000,"protein":0,"glu":50,"fat":0,"osmratio":1,"na":0,"k":0},{"id":18,"name":"10%ブドウ糖液","pack":"500ml","tapVol":500,"volume":0,"totalCal":400,"water":1000,"protein":0,"glu":100,"fat":0,"osmratio":2,"na":0,"k":0},{"id":19,"name":"50%ブドウ糖液","pack":"20/200ml","tapVol":20,"volume":0,"totalCal":2000,"water":1000,"protein":0,"glu":500,"fat":0,"osmratio":12,"na":0,"k":0},{"id":20,"name":"ｲﾝﾄﾗﾘﾎﾟｽ20%","pack":"100/250ml","tapVol":250,"volume":0,"totalCal":2000,"water":1000,"protein":0,"glu":0,"fat":222.2,"osmratio":1,"na":0,"k":0},{"id":21,"name":"KCL注","pack":"20mEq/20ml","tapVol":20,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":6,"na":0,"k":39000},{"id":22,"name":"白湯","pack":"","tapVol":0,"volume":0,"totalCal":0,"water":1000,"protein":0,"glu":0,"fat":0,"osmratio":null,"na":0,"k":0},{"id":23,"name":"エネーボ","pack":"250ml/缶","tapVol":250,"volume":0,"totalCal":1200,"water":812,"protein":54,"glu":158.4,"fat":38.4,"osmratio":null,"na":920,"k":1200},{"id":24,"name":"エンシュアH","pack":"250ml/缶","tapVol":250,"volume":0,"totalCal":1500,"water":776,"protein":52.8,"glu":206,"fat":52.8,"osmratio":null,"na":1200,"k":2240},{"id":25,"name":"ｴﾝｼｭｱﾘｷｯﾄﾞ","pack":"250ml","tapVol":250,"volume":0,"totalCal":1000,"water":852,"protein":35.2,"glu":137.2,"fat":0,"osmratio":null,"na":800,"k":1480},{"id":26,"name":"イノラス","pack":"187.5ml","tapVol":187.5,"volume":0,"totalCal":1600,"water":744,"protein":64,"glu":212.24,"fat":51.52,"osmratio":null,"na":1440,"k":2944},{"id":27,"name":"エレンタール","pack":"80g/包","tapVol":80,"volume":0,"totalCal":3750,"water":0,"protein":164,"glu":793,"fat":6.375,"osmratio":null,"na":3250,"k":2720},{"id":28,"name":"ラコールNF","pack":"200ml","tapVol":200,"volume":0,"totalCal":1000,"water":850,"protein":44,"glu":156.2,"fat":22.5,"osmratio":null,"na":738,"k":1380},{"id":29,"name":"ラコール半固形","pack":"300g","tapVol":300,"volume":0,"totalCal":1000,"water":760,"protein":43.8,"glu":156.2,"fat":22.3,"osmratio":null,"na":738,"k":1380},{"id":30,"name":"ﾊｲﾈｯｸｽｾﾞﾘｰ","pack":"300g","tapVol":300,"volume":0,"totalCal":1000,"water":760,"protein":45,"glu":131.6,"fat":27.7,"osmratio":null,"na":1770,"k":1840},{"id":31,"name":"ﾊｲﾈｯｸｽｲｰｹﾞﾙ","pack":"500ml","tapVol":500,"volume":0,"totalCal":800,"water":880,"protein":32,"glu":123,"fat":17.6,"osmratio":null,"na":1330,"k":1250},{"id":32,"name":"ｱｲｿｶﾙｸﾘｱ","pack":"200ml/本","tapVol":200,"volume":0,"totalCal":1000,"water":830,"protein":50,"glu":200,"fat":0,"osmratio":null,"na":0,"k":0},{"id":33,"name":"ｱｲｿｶﾙｻﾎﾟｰﾄ1.0","pack":"400ml","tapVol":400,"volume":0,"totalCal":1000,"water":840,"protein":45,"glu":135,"fat":28,"osmratio":null,"na":1900,"k":1600},{"id":34,"name":"ｱｲｿｶﾙ2Kneo","pack":"200ml","tapVol":200,"volume":0,"totalCal":2000,"water":700,"protein":60,"glu":239,"fat":85,"osmratio":null,"na":2400,"k":1500},{"id":35,"name":"ﾒｲﾊﾞﾗﾝｽぎゅっとmini","pack":"100ml","tapVol":100,"volume":0,"totalCal":2000,"water":689,"protein":75,"glu":293,"fat":56,"osmratio":null,"na":1300,"k":1800},{"id":36,"name":"ﾘｶﾊﾞﾘｰK5","pack":"330ml/本","tapVol":330,"volume":0,"totalCal":1212,"water":800,"protein":60.6,"glu":158.8,"fat":32.4,"osmratio":null,"na":2000,"k":1636.4},{"id":37,"name":"ﾍﾟﾌﾟﾀﾒﾝｽﾀﾝﾀﾞｰﾄﾞ","pack":"200ml","tapVol":200,"volume":0,"totalCal":1500,"water":765,"protein":52.5,"glu":187.5,"fat":60,"osmratio":null,"na":2145,"k":1600},{"id":38,"name":"ﾍﾟﾌﾟﾀﾒﾝAF","pack":"200ml","tapVol":200,"volume":0,"totalCal":1500,"water":775,"protein":95,"glu":132,"fat":66,"osmratio":null,"na":2630,"k":2320},{"id":39,"name":"ﾘｰﾅﾚﾝMP","pack":"125ml/本","tapVol":125,"volume":0,"totalCal":1600,"water":748.8,"protein":56,"glu":240,"fat":44.8,"osmratio":null,"na":960,"k":480},{"id":40,"name":"ｲﾝｽﾛｰ","pack":"200ml/本","tapVol":200,"volume":0,"totalCal":1000,"water":844,"protein":50,"glu":122,"fat":33,"osmratio":null,"na":1100,"k":1000}]';
 
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onerror = (event) => console.error('Database error:', event.target.error);
-        request.onupgradeneeded = (event) => {
-            db = event.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            if (!db.objectStoreNames.contains(DATA_STORE)) db.createObjectStore(DATA_STORE, { keyPath: 'id' });
-        };
-        request.onsuccess = (event) => {
-            db = event.target.result;
-            getPack();
-        };
+    // データベースを初期化
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = (event) => console.error('Database error:', event.target.error);
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, {keyPath: 'id'});
+        if (!db.objectStoreNames.contains(DATA_STORE)) db.createObjectStore(DATA_STORE, {keyPath: 'id'});
+    };
+    request.onsuccess = (event) => {
+        db = event.target.result;
+        getPack();
+    };
 
-        function showHide() {
-            document.getElementById('pacTable').querySelectorAll('.input-vit').forEach(vitCol => {
-                vitCol.style.visibility = (vitCol.style.visibility === "collapse") ? "visible" : "collapse";
-            });
-            document.getElementById('pacTable').querySelectorAll('.input-nut').forEach(vitCol => {
-                vitCol.style.visibility = (vitCol.style.visibility === "visible") ? "collapse" : "visible";
-            });
-        }
+    function showHide() {
+        document.getElementById('pacTable').querySelectorAll('.input-vit').forEach(vitCol => {
+            vitCol.style.visibility = (vitCol.style.visibility === "collapse") ? "visible" : "collapse";
+        });
+        document.getElementById('pacTable').querySelectorAll('.input-nut').forEach(vitCol => {
+            vitCol.style.visibility = (vitCol.style.visibility === "visible") ? "collapse" : "visible";
+        });
+    }
 
-        function makeFirstNutLists() {
-            document.getElementById('restore').value = hukkatsu;
-            restoreIndexedDB();
-        }
+    function makeFirstNutLists() {
+        document.getElementById('restore').value = hukkatsu;
+        restoreIndexedDB();
+    }
 
-        function savePacInputValues(id, name, pack, volume, tapVol, totalCal, water, protein, glu, fat, osmratio, na, k) {
-            const transaction = db.transaction([DATA_STORE], 'readwrite');
-            const store = transaction.objectStore(DATA_STORE);
-            store.put({ id, name, pack, tapVol, volume, totalCal, water, protein, glu, fat, osmratio, na, k });
-        }
+    function savePacInputValues(id, name, pack, volume, tapVol, totalCal, water, protein, glu, fat, osmratio, na, k) {
+        const transaction = db.transaction([DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(DATA_STORE);
+        store.put({id, name, pack, tapVol, volume, totalCal, water, protein, glu, fat, osmratio, na, k});
+    }
 
-        function getPack() {
-            const transaction = db.transaction([DATA_STORE], 'readonly');
-            const store = transaction.objectStore(DATA_STORE);
-            const request = store.getAll();
-            request.onsuccess = () => {
-                let maxID = 0;
-                const records = request.result;
-                document.getElementById('restore').value = JSON.stringify(records);
-                const tbody = document.getElementById('pacBody');
-                tbody.innerHTML = '';
-                records.sort((a, b) => a.id - b.id).forEach(record => {
-                    const row = tbody.insertRow();
-                    const isPack = record.osmratio == null;
-                    const viewNa = isPack ? record.na : (record.na / 23).toFixed(0);
-                    const viewK = isPack ? record.k : (record.k / 39).toFixed(0);
-                    row.insertCell().innerHTML = `<button onclick="delRow(this)">－</button>`;
-                    row.insertCell().innerHTML = `<div class="resID">${record.id}</div>`;
-                    row.insertCell().innerHTML = `<input type="checkbox" onchange="changePack(this)" ${isPack ? 'checked' : ''} />`;
-                    let nameCell = row.insertCell();
-                    nameCell.innerHTML = `<input type="text" class="pacValue input-l name" value="${record.name}">`;
-                    nameCell.className = "fixedName";
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m totalCal" value="${record.totalCal}">kcal`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m water" value="${record.water}">ml`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-s protein" value="${record.protein}">g`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m glu" value="${record.glu}">g`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m fat" value="${record.fat}">g`;
-                    row.insertCell().innerHTML = `<input type="text" class="pacValue input-l pack" value="${record.pack}">`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m tapVol" value="${record.tapVol}">ml`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m na" value="${viewNa}">${isPack ? '<span class="unit">mg</span>' : '<span class="unit">mEq</span>'}`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-m k" value="${viewK}">${isPack ? '<span class="unit">mg</span>' : '<span class="unit">mEq</span>'}`;
-                    row.insertCell().innerHTML = `<input type="number" class="pacValue input-s osm" value="${record.osmratio || ''}" ${isPack ? 'disabled' : ''} />`;
-                    maxID = Math.max(maxID, record.id);
-                });
-                document.getElementById('pacTable').querySelectorAll('.pacValue').forEach(pacVal => pacVal.addEventListener('input', inputVolume));
+    function getPack() {
+        const transaction = db.transaction([DATA_STORE], 'readonly');
+        const store = transaction.objectStore(DATA_STORE);
+        const request = store.getAll();
+        request.onsuccess = () => {
+            let maxID = 0;
+            const records = request.result;
+            document.getElementById('restore').value = JSON.stringify(records);
+            const tbody = document.getElementById('pacBody');
+            tbody.innerHTML = '';
+            records.sort((a, b) => a.id - b.id).forEach(record => {
                 const row = tbody.insertRow();
-                row.insertCell().innerHTML = '<button onclick="addRow(this)">＋</button>';
-                row.insertCell().innerHTML = `<div class="resID">${maxID + 1}</div>`;
-            };
-        }
-
-        function inputVolume() {
-            const row = this.parentNode.parentNode;
-            const inputID = Number(row.querySelector('.resID').textContent);
-            const totalCal = Number(row.querySelector('.totalCal').value);
-            const name = row.querySelector('.name').value;
-            const water = Number(row.querySelector('.water').value);
-            const protein = Number(row.querySelector('.protein').value);
-            const glu = Number(row.querySelector('.glu').value);
-            const fat = Number(row.querySelector('.fat').value);
-            const pack = row.querySelector('.pack').value;
-            const tapVol = Number(row.querySelector('.tapVol').value);
-            const inputNa = Number(row.querySelector('.na').value);
-            const inputK = Number(row.querySelector('.k').value);
-            const inputosm = row.querySelector('.osm').value;
-            const isPack = inputosm === '';
-            const na = isPack ? inputNa : inputNa * 23;
-            const k = isPack ? inputK : inputK * 39;
-            const osm = isPack ? null : Number(inputosm);
-            savePacInputValues(inputID, name, pack, 0, tapVol, totalCal, water, protein, glu, fat, osm, na, k);
-        }
-
-        function addRow(con) {
-            const row = con.parentElement.parentElement;
-            const inputID = Number(row.querySelector('.resID').textContent);
-            row.insertCell().innerHTML = `<input type="checkbox" onchange="changePack(this)" />`;
-            let nameCell = row.insertCell();
-            nameCell.innerHTML = `<input type="text" class="pacValue input-l name" value="">`;
-            nameCell.className = "fixedName";
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m totalCal" value="0">kcal`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m water" value="0">ml`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-s protein" value="0">g`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m glu" value="0">g`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m fat" value="0">g`;
-            row.insertCell().innerHTML = `<input type="text" class="pacValue input-l pack" value="">`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m tapVol" value="0">ml`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m na" value="0"><span class="unit">mEq</span>`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-m k" value="0"><span class="unit">mEq</span>`;
-            row.insertCell().innerHTML = `<input type="number" class="pacValue input-s osm" value="1" />`;
+                const isPack = record.osmratio == null;
+                const viewNa = isPack ? record.na : (record.na / 23).toFixed(0);
+                const viewK = isPack ? record.k : (record.k / 39).toFixed(0);
+                row.insertCell().innerHTML = `<button onclick="delRow(this)">－</button>`;
+                row.insertCell().innerHTML = `<div class="resID">${record.id}</div>`;
+                row.insertCell().innerHTML = `<input type="checkbox" onchange="changePack(this)" ${isPack ? 'checked' : ''} />`;
+                let nameCell = row.insertCell();
+                nameCell.innerHTML = `<input type="text" class="pacValue input-l name" value="${record.name}">`;
+                nameCell.className = "fixedName";
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m totalCal" value="${record.totalCal}">kcal`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m water" value="${record.water}">ml`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-s protein" value="${record.protein}">g`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m glu" value="${record.glu}">g`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m fat" value="${record.fat}">g`;
+                row.insertCell().innerHTML = `<input type="text" class="pacValue input-l pack" value="${record.pack}">`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m tapVol" value="${record.tapVol}">ml`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m na" value="${viewNa}">${isPack ? '<span class="unit">mg</span>' : '<span class="unit">mEq</span>'}`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-m k" value="${viewK}">${isPack ? '<span class="unit">mg</span>' : '<span class="unit">mEq</span>'}`;
+                row.insertCell().innerHTML = `<input type="number" class="pacValue input-s osm" value="${record.osmratio || ''}" ${isPack ? 'disabled' : ''} />`;
+                maxID = Math.max(maxID, record.id);
+            });
             document.getElementById('pacTable').querySelectorAll('.pacValue').forEach(pacVal => pacVal.addEventListener('input', inputVolume));
-            const delBut = row.querySelector('button');
-            delBut.setAttribute('onclick', 'delRow(this)');
-            delBut.innerText = "－";
-            const newRow = document.getElementById('pacBody').insertRow();
-            newRow.insertCell().innerHTML = '<button onclick="addRow(this)">＋</button>';
-            newRow.insertCell().innerHTML = `<div class="resID">${inputID + 1}</div>`;
-        }
+            const row = tbody.insertRow();
+            row.insertCell().innerHTML = '<button onclick="addRow(this)">＋</button>';
+            row.insertCell().innerHTML = `<div class="resID">${maxID + 1}</div>`;
+        };
+    }
 
-        function changePack(con) {
-            const boolPack = con.checked;
-            if (confirm("チェックするとNa,KでmEqとmgの変換が行われ微妙に数値がズレ、浸透圧比は1もしくはなしにリセットされますがよろしいですか？")) {
-                const row = con.parentNode.parentNode;
-                if (boolPack) {
-                    row.querySelector('.osm').value = "";
-                    row.querySelector('.osm').disabled = true;
-                    row.querySelector('.na').value = Number(row.querySelector('.na').value) * 23;
-                    row.querySelector('.k').value = Number(row.querySelector('.k').value) * 39;
-                    row.querySelectorAll('.unit').forEach(un => un.innerText = "mg");
-                } else {
-                    row.querySelector('.osm').value = "1";
-                    row.querySelector('.osm').disabled = false;
-                    row.querySelector('.na').value = (Number(row.querySelector('.na').value) / 23).toFixed(0);
-                    row.querySelector('.k').value = (Number(row.querySelector('.k').value) / 39).toFixed(0);
-                    row.querySelectorAll('.unit').forEach(un => un.innerText = "mEq");
-                }
-                row.querySelector('.osm').dispatchEvent(new Event('input'));
-            } else {
-                con.checked = !boolPack;
-            }
-        }
+    function inputVolume() {
+        const row = this.parentNode.parentNode;
+        const inputID = Number(row.querySelector('.resID').textContent);
+        const totalCal = Number(row.querySelector('.totalCal').value);
+        const name = row.querySelector('.name').value;
+        const water = Number(row.querySelector('.water').value);
+        const protein = Number(row.querySelector('.protein').value);
+        const glu = Number(row.querySelector('.glu').value);
+        const fat = Number(row.querySelector('.fat').value);
+        const pack = row.querySelector('.pack').value;
+        const tapVol = Number(row.querySelector('.tapVol').value);
+        const inputNa = Number(row.querySelector('.na').value);
+        const inputK = Number(row.querySelector('.k').value);
+        const inputosm = row.querySelector('.osm').value;
+        const isPack = inputosm === '';
+        const na = isPack ? inputNa : inputNa * 23;
+        const k = isPack ? inputK : inputK * 39;
+        const osm = isPack ? null : Number(inputosm);
+        savePacInputValues(inputID, name, pack, 0, tapVol, totalCal, water, protein, glu, fat, osm, na, k);
+    }
 
-        function delRow(con) {
+    function addRow(con) {
+        const row = con.parentElement.parentElement;
+        const inputID = Number(row.querySelector('.resID').textContent);
+        row.insertCell().innerHTML = `<input type="checkbox" onchange="changePack(this)" />`;
+        let nameCell = row.insertCell();
+        nameCell.innerHTML = `<input type="text" class="pacValue input-l name" value="">`;
+        nameCell.className = "fixedName";
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m totalCal" value="0">kcal`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m water" value="0">ml`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-s protein" value="0">g`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m glu" value="0">g`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m fat" value="0">g`;
+        row.insertCell().innerHTML = `<input type="text" class="pacValue input-l pack" value="">`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m tapVol" value="0">ml`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m na" value="0"><span class="unit">mEq</span>`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-m k" value="0"><span class="unit">mEq</span>`;
+        row.insertCell().innerHTML = `<input type="number" class="pacValue input-s osm" value="1" />`;
+        document.getElementById('pacTable').querySelectorAll('.pacValue').forEach(pacVal => pacVal.addEventListener('input', inputVolume));
+        const delBut = row.querySelector('button');
+        delBut.setAttribute('onclick', 'delRow(this)');
+        delBut.innerText = "－";
+        const newRow = document.getElementById('pacBody').insertRow();
+        newRow.insertCell().innerHTML = '<button onclick="addRow(this)">＋</button>';
+        newRow.insertCell().innerHTML = `<div class="resID">${inputID + 1}</div>`;
+    }
+
+    function changePack(con) {
+        const boolPack = con.checked;
+        if (confirm("チェックするとNa,KでmEqとmgの変換が行われ微妙に数値がズレ、浸透圧比は1もしくはなしにリセットされますがよろしいですか？")) {
             const row = con.parentNode.parentNode;
-            const inputID = Number(row.querySelector('.resID').textContent);
-            const name = row.querySelector('.name').value;
-            if (confirm(`${name}(ID:${inputID})を削除します。よろしいですか？`)) delPack(inputID);
+            if (boolPack) {
+                row.querySelector('.osm').value = "";
+                row.querySelector('.osm').disabled = true;
+                row.querySelector('.na').value = Number(row.querySelector('.na').value) * 23;
+                row.querySelector('.k').value = Number(row.querySelector('.k').value) * 39;
+                row.querySelectorAll('.unit').forEach(un => un.innerText = "mg");
+            } else {
+                row.querySelector('.osm').value = "1";
+                row.querySelector('.osm').disabled = false;
+                row.querySelector('.na').value = (Number(row.querySelector('.na').value) / 23).toFixed(0);
+                row.querySelector('.k').value = (Number(row.querySelector('.k').value) / 39).toFixed(0);
+                row.querySelectorAll('.unit').forEach(un => un.innerText = "mEq");
+            }
+            row.querySelector('.osm').dispatchEvent(new Event('input'));
+        } else {
+            con.checked = !boolPack;
         }
+    }
 
-        function delPack(id) {
-            const transaction = db.transaction([DATA_STORE], 'readwrite');
-            transaction.objectStore(DATA_STORE).delete(id);
+    function delRow(con) {
+        const row = con.parentNode.parentNode;
+        const inputID = Number(row.querySelector('.resID').textContent);
+        const name = row.querySelector('.name').value;
+        if (confirm(`${name}(ID:${inputID})を削除します。よろしいですか？`)) delPack(inputID);
+    }
+
+    function delPack(id) {
+        const transaction = db.transaction([DATA_STORE], 'readwrite');
+        transaction.objectStore(DATA_STORE).delete(id);
+        getPack();
+    }
+
+    function updateRestores() {
+        const transaction = db.transaction([DATA_STORE], 'readonly');
+        const request = transaction.objectStore(DATA_STORE).getAll();
+        request.onsuccess = () => document.getElementById('restore').value = JSON.stringify(request.result);
+    }
+
+    function showModalDialog() {
+        updateRestores();
+        stopQrScanning();
+        document.getElementById('qrcode-container').innerHTML = '';
+        document.getElementById('scan-status').textContent = '';
+        document.getElementById("DIALOG").showModal();
+    }
+
+    function closeDialog(val) {
+        stopQrScanning();
+        if (val.returnValue !== "cancel" && confirm('記載の呪文で製剤一覧を復活してもよろしいですか？(現在のリストは失われます)')) {
+            restoreIndexedDB();
             getPack();
         }
+    }
 
-        function updateRestores() {
-            const transaction = db.transaction([DATA_STORE], 'readonly');
-            const request = transaction.objectStore(DATA_STORE).getAll();
-            request.onsuccess = () => document.getElementById('restore').value = JSON.stringify(request.result);
+    function restoreIndexedDB() {
+        const transaction = db.transaction([DATA_STORE], 'readwrite');
+        const store = transaction.objectStore(DATA_STORE);
+        store.clear();
+        try {
+            const restoreJSON = JSON.parse(document.getElementById('restore').value);
+            restoreJSON.forEach(pacVal => store.put(pacVal));
+        } catch (error) {
+            alert(error);
         }
+    }
 
-        function showModalDialog() {
-            updateRestores();
-            stopQrScanning();
-            document.getElementById('qrcode-container').innerHTML = '';
-            document.getElementById('scan-status').textContent = '';
-            document.getElementById("DIALOG").showModal();
+    function initializePac() {
+        if (confirm('製剤一覧を初期化してもよろしいですか？(現在のリストは失われます)')) {
+            makeFirstNutLists();
+            getPack();
         }
+    }
 
-        function closeDialog(val) {
-            stopQrScanning();
-            if (val.returnValue !== "cancel" && confirm('記載の呪文で製剤一覧を復活してもよろしいですか？(現在のリストは失われます)')) {
-                restoreIndexedDB();
-                getPack();
+    function generateQRCodes() {
+        const text = document.getElementById('restore').value;
+        const container = document.getElementById('qrcode-container');
+        container.innerHTML = '';
+        if (!text || text === '読込中・・・') {
+            alert('有効なデータがありません。');
+            return;
+        }
+        try {
+            const codeWriter = new ZXing.BrowserQRCodeSvgWriter();
+            const chunkSize = 250;
+            const numChunks = Math.ceil(text.length / chunkSize);
+            for (let i = 0; i < numChunks; i++) {
+                const chunk = text.substring(i * chunkSize, (i + 1) * chunkSize);
+                const payload = `P${i + 1}/${numChunks}:${chunk}`;
+                const qrWrapper = document.createElement('div');
+                qrWrapper.style.margin = '10px';
+                qrWrapper.style.display = 'inline-block';
+                qrWrapper.style.color = '#000';
+                const label = document.createElement('p');
+                label.textContent = `QRコード ${i + 1} / ${numChunks}`;
+                label.style.textAlign = 'center';
+                label.style.margin = '0 0 5px 0';
+                qrWrapper.appendChild(label);
+                const svgElement = codeWriter.write(payload, 200, 200);
+                qrWrapper.appendChild(svgElement);
+                container.appendChild(qrWrapper);
             }
+        } catch (error) {
+            console.error('QR Code generation failed:', error);
+            alert('QRコードの生成に失敗しました。\n' + error);
         }
+    }
 
-        function restoreIndexedDB() {
-            const transaction = db.transaction([DATA_STORE], 'readwrite');
-            const store = transaction.objectStore(DATA_STORE);
-            store.clear();
-            try {
-                const restoreJSON = JSON.parse(document.getElementById('restore').value);
-                restoreJSON.forEach(pacVal => store.put(pacVal));
-            } catch (error) {
-                alert(error);
-            }
-        }
+    // --- QRコード読み取り関連 ---
+    let codeReader = null;
+    let scannedChunks = new Map();
+    let totalChunks = 0;
 
-        function initializePac() {
-            if (confirm('製剤一覧を初期化してもよろしいですか？(現在のリストは失われます)')) {
-                makeFirstNutLists();
-                getPack();
-            }
-        }
+    function startScan(facingModeConstraint) {
+        stopQrScanning();
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        scannedChunks.clear();
+        totalChunks = 0;
 
-        function generateQRCodes() {
-            const text = document.getElementById('restore').value;
-            const container = document.getElementById('qrcode-container');
-            container.innerHTML = '';
-            if (!text || text === '読込中・・・') {
-                alert('有効なデータがありません。');
-                return;
-            }
-            try {
-                const codeWriter = new ZXing.BrowserQRCodeSvgWriter();
-                const chunkSize = 250;
-                const numChunks = Math.ceil(text.length / chunkSize);
-                for (let i = 0; i < numChunks; i++) {
-                    const chunk = text.substring(i * chunkSize, (i + 1) * chunkSize);
-                    const payload = `P${i + 1}/${numChunks}:${chunk}`;
-                    const qrWrapper = document.createElement('div');
-                    qrWrapper.style.margin = '10px';
-                    qrWrapper.style.display = 'inline-block';
-                    // 文字色を濃い色に変更
-                    qrWrapper.style.color = '#000';
-                    const label = document.createElement('p');
-                    label.textContent = `QRコード ${i + 1} / ${numChunks}`;
-                    label.style.textAlign = 'center';
-                    label.style.margin = '0 0 5px 0';
-                    qrWrapper.appendChild(label);
-                    const svgElement = codeWriter.write(payload, 200, 200);
-                    qrWrapper.appendChild(svgElement);
-                    container.appendChild(qrWrapper);
+        const videoElem = document.getElementById('video-preview');
+        const statusElem = document.getElementById('scan-status');
+        const stopBtn = document.getElementById('stop-scan-btn');
+        
+        videoElem.style.display = 'block';
+        stopBtn.style.display = 'inline-block';
+        statusElem.textContent = 'カメラを起動中...';
+
+        const constraints = { video: facingModeConstraint };
+
+        try {
+            codeReader.decodeFromConstraints(constraints, videoElem, (result, err) => {
+                if (result) {
+                    processScannedData(result.getText());
                 }
-            } catch (error) {
-                console.error('QR Code generation failed:', error);
-                alert('QRコードの生成に失敗しました。\n' + error);
-            }
-        }
-
-        // --- QRコード読み取り関連 ---
-        let codeReader = null;
-        let scannedChunks = new Map();
-        let totalChunks = 0;
-
-        async function startQrScanning() {
+                if (err && !(err instanceof ZXing.NotFoundException)) {
+                    console.error(err);
+                }
+            });
+            statusElem.textContent = 'カメラにQRコードをかざしてください。';
+        } catch (err) {
+            console.error("decodeFromConstraints failed to start:", err);
+            statusElem.textContent = 'カメラの起動に失敗しました。';
             stopQrScanning();
-            codeReader = new ZXing.BrowserMultiFormatReader();
+        }
+    }
+
+    function processScannedData(data) {
+        const match = data.match(/^P(\d+)\/(\d+):([\s\S]*)$/);
+        if (!match) return;
+
+        const part = parseInt(match[1]), total = parseInt(match[2]), chunk = match[3];
+        if (scannedChunks.has(part)) return;
+
+        if (totalChunks === 0) totalChunks = total;
+        else if (totalChunks !== total) {
             scannedChunks.clear();
-            totalChunks = 0;
+            totalChunks = total;
+        }
+        scannedChunks.set(part, chunk);
+        const statusElem = document.getElementById('scan-status');
+        statusElem.textContent = `読み取り完了: ${scannedChunks.size} / ${totalChunks}。次のQRをスキャンしてください。`;
 
-            document.getElementById('video-preview').style.display = 'block';
-            document.getElementById('stop-scan-btn').style.display = 'inline-block';
-            const statusElem = document.getElementById('scan-status');
-            statusElem.textContent = 'カメラを起動中...';
+        if ('vibrate' in navigator) navigator.vibrate(100);
 
-            // 背面カメラ(environment)とオートフォーカス(continuous)を要求
-            const constraints = {
-                video: {
-                    facingMode: 'environment',
-                    focusMode: 'continuous'
+        if (scannedChunks.size === totalChunks) {
+            let fullData = '', isComplete = true;
+            for (let i = 1; i <= totalChunks; i++) {
+                if (scannedChunks.has(i)) fullData += scannedChunks.get(i);
+                else {
+                    statusElem.textContent = `エラー: パート ${i} が不足しています。再度お試しください。`;
+                    isComplete = false;
+                    break;
                 }
-            };
-
-            try {
-                statusElem.textContent = 'カメラにQRコードをかざしてください。';
-                // デバイスID指定から制約指定に変更
-                codeReader.decodeFromConstraints(constraints, 'video-preview', (result, err) => {
-                    if (result) {
-                        processScannedData(result.getText());
-                    }
-                    if (err && !(err instanceof ZXing.NotFoundException)) {
-                        console.error(err);
-                        statusElem.textContent = `エラー: ${err}`;
-                    }
-                });
-            } catch (error) {
-                console.error(error);
-                statusElem.textContent = 'カメラの起動に失敗しました。カメラへのアクセスを許可しているか、お使いのブラウザが対応しているか確認してください。';
+            }
+            if (isComplete) {
+                document.getElementById('restore').value = fullData;
+                statusElem.textContent = '全てのデータの読み取りが完了しました！';
                 stopQrScanning();
             }
         }
+    }
 
-        function processScannedData(data) {
-            const match = data.match(/^P(\d+)\/(\d+):([\s\S]*)$/);
-            if (!match) return; // 関係ないQRコードは無視
-
-            const part = parseInt(match[1]);
-            const total = parseInt(match[2]);
-            const chunk = match[3];
-
-            if (scannedChunks.has(part)) return; // 同じものは再度処理しない
-
-            if (totalChunks === 0) {
-                totalChunks = total;
-            } else if (totalChunks !== total) { // 別のセットのQRと混ざった場合リセット
-                scannedChunks.clear();
-                totalChunks = total;
-            }
-
-            scannedChunks.set(part, chunk);
-            const statusElem = document.getElementById('scan-status');
-            statusElem.textContent = `読み取り完了: ${scannedChunks.size} / ${totalChunks}。次のQRをスキャンしてください。`;
-
-            if ('vibrate' in navigator) navigator.vibrate(100);
-
-            if (scannedChunks.size === totalChunks) {
-                let fullData = '';
-                let isComplete = true;
-                for (let i = 1; i <= totalChunks; i++) {
-                    if (scannedChunks.has(i)) {
-                        fullData += scannedChunks.get(i);
-                    } else {
-                        statusElem.textContent = `エラー: パート ${i} が不足しています。再度お試しください。`;
-                        isComplete = false;
-                        break;
-                    }
-                }
-
-                if (isComplete) {
-                    document.getElementById('restore').value = fullData;
-                    statusElem.textContent = '全てのデータの読み取りが完了しました！';
-                    stopQrScanning();
-                }
-            }
+    function stopQrScanning() {
+        if (codeReader) {
+            codeReader.reset();
+            codeReader = null;
         }
-
-        function stopQrScanning() {
-            if (codeReader) {
-                codeReader.reset();
-                codeReader = null;
-            }
-            document.getElementById('video-preview').style.display = 'none';
-            document.getElementById('stop-scan-btn').style.display = 'none';
+        const videoElem = document.getElementById('video-preview');
+        if (videoElem.srcObject) {
+            videoElem.srcObject.getTracks().forEach(track => track.stop());
+            videoElem.srcObject = null;
         }
-
-    </script>
+        videoElem.style.display = 'none';
+        document.getElementById('stop-scan-btn').style.display = 'none';
+    }
+</script>
 </body>
-
 </html>
