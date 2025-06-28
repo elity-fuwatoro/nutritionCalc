@@ -140,9 +140,9 @@
         </button>
         <button type="button" onclick="generateQRCodes()" style="margin-top: 5px">QRコード生成</button>
         
-        <button type="button" onclick="startScan({ facingMode: 'environment' })" style="margin-top: 5px">背面QRスキャン</button>
-        <button type="button" onclick="startScan({ facingMode: 'user' })" style="margin-top: 5px">前面QRスキャン</button>
-        <button type="button" id="stop-scan-btn" onclick="stopQrScanning()" style="margin-top: 5px; display: none;">QRスキャン停止</button>
+        <button type="button" onclick="startScan({ facingMode: 'environment' })" style="margin-top: 5px">背面カメラでスキャン</button>
+        <button type="button" onclick="startScan({ facingMode: 'user' })" style="margin-top: 5px">前面カメラでスキャン</button>
+        <button type="button" id="stop-scan-btn" onclick="stopQrScanning()" style="margin-top: 5px; display: none;">スキャン停止</button>
         
         <p id="scan-status" style="color: white; margin: 5px 0 0 0;"></p>
         <video id="video-preview" playsinline></video>
@@ -383,7 +383,7 @@
         }
         try {
             const codeWriter = new ZXing.BrowserQRCodeSvgWriter();
-            const chunkSize = 250;
+            const chunkSize = 150;
             const numChunks = Math.ceil(text.length / chunkSize);
             for (let i = 0; i < numChunks; i++) {
                 const chunk = text.substring(i * chunkSize, (i + 1) * chunkSize);
@@ -397,7 +397,8 @@
                 label.style.textAlign = 'center';
                 label.style.margin = '0 0 5px 0';
                 qrWrapper.appendChild(label);
-                const svgElement = codeWriter.write(payload, 200, 200);
+                // **修正点**: QRコードのサイズを 350x350 に変更
+                const svgElement = codeWriter.write(payload, 350, 350);
                 qrWrapper.appendChild(svgElement);
                 container.appendChild(qrWrapper);
             }
@@ -460,8 +461,6 @@
         scannedChunks.set(part, chunk);
         const statusElem = document.getElementById('scan-status');
         statusElem.textContent = `読み取り完了: ${scannedChunks.size} / ${totalChunks}。次のQRをスキャンしてください。`;
-
-        if ('vibrate' in navigator) navigator.vibrate(100);
 
         if (scannedChunks.size === totalChunks) {
             let fullData = '', isComplete = true;
