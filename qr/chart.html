@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PFCチャート</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #chartContainer {
+            width: 80vh;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+<div id="chartContainer">
+    <canvas id="nutritionChart"></canvas>
+</div>
+
+<script>
+    // URLからパラメーターを取得する関数
+    // 書式：?carbs=155&fat=40&protein=40
+    function getUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            carbs: Number(params.get('carbs') || '0'),
+            fat: Number(params.get('fat') || '0'),
+            protein: Number(params.get('protein') || '0')
+        };
+    }
+
+    // カロリー計算関数
+    function calculateCalories(nutrients) {
+        return {
+            carbs: nutrients.carbs * 4,  // 炭水化物1gあたり4kcal
+            fat: nutrients.fat * 9,      // 脂質1gあたり9kcal
+            protein: nutrients.protein * 4  // タンパク質1gあたり4kcal
+        };
+    }
+
+    // チャート作成関数
+    function createNutritionChart(calories) {
+        const totalCalories = calories.carbs + calories.fat + calories.protein;
+        const npcn = (totalCalories - calories.protein) / calories.protein * 25;// NPC/N=NPC/(タンパク質量g/6.25(=25/4))
+
+        new Chart(document.getElementById('nutritionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['炭水化物', '脂質', 'タンパク質'],
+                datasets: [{
+                    data: [
+                        calories.carbs,
+                        calories.fat,
+                        calories.protein
+                    ],
+                    backgroundColor: [
+                        '#36A2EB',  // 青 (炭水化物)
+                        '#FFCE56',   // 黄色 (脂質)
+                        '#FF6384'  // ピンク (タンパク質)
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `蛋白：0.8～1g/日/kg. 脂質：20～40%. 糖質50～60%(静脈経腸栄養ガイドライン 第3版 2014)`
+                    },
+                    tooltip: {
+                        enabled: false
+                    },
+                }
+            },
+            plugins: [{
+                id: 'centerText',
+                beforeDraw: function (chart) {
+                    const width = chart.width;
+                    const height = chart.height;
+                    const ctx = chart.ctx;
+
+                    // ctx.restore();
+                    const fontSize = (height / 400).toFixed(2);
+                    ctx.font = fontSize + 'em sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    const text = `${totalCalories.toFixed(0)}kcal\nNPC/N：${npcn.toFixed(0)}`;
+                    const textX = Math.round((width - fontSize) / 2);
+                    const textY = Math.round(height / 2);
+
+                    ctx.fillStyle = 'black';
+
+                    // テキストを複数行で描画
+                    const lines = text.split('\n');
+                    const lineHeight = fontSize * 20;
+
+                    lines.forEach((line, index) => {
+                        ctx.fillText(line, textX, textY + (index * lineHeight));
+                    });
+
+                    ctx.save();
+                },
+                afterDraw(chart, go) {
+                    const ctx = chart.ctx;
+                    chart.data.datasets.forEach((dataset, i) => {
+
+
+                        const meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach(function (element, index) {
+                                // フォントの設定
+                                let fontSize = 28;
+                                let fontStyle = 'normal';
+                                let fontFamily = 'sans-serif';
+                                ctx.fillStyle = '#000';
+                                // 設定を適用
+                                ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
+                                const isHidden = dataset.data[index] !== 0;
+                                // ラベルをパーセント表示に変更
+                                let labelString = isHidden ? chart.data.labels[index] : '';
+                                let dataString = isHidden ? `${(Math.round(dataset.data[index] / totalCalories * 100)).toString()}%` : '';
+                                const calString = isHidden ? `${dataset.data[index].toFixed(0)}kcal` : '';
+
+                                // positionの設定
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+
+                                let padding = -2;
+                                let position = element.tooltipPosition();
+                                // ツールチップに変更内容を表示
+                                ctx.fillText(labelString, position.x, position.y - (fontSize) - padding);// title
+                                ctx.fillText(dataString, position.x, position.y - padding); // データの百分率
+                                ctx.fillText(calString, position.x, position.y + (fontSize) - padding); // データの百分率
+
+                                // 凡例の位置調整
+                                let legend = chart.legend;
+                                legend.top = chart.height - (legend.height / 2) - (legend.top / 2);
+                            })
+                        }
+                    })
+                }
+            }]
+        });
+    }
+
+    // ページ読み込み時に実行
+    window.onload = function () {
+        const nutrients = getUrlParams();
+        const calories = calculateCalories(nutrients);
+        createNutritionChart(calories);
+    };
+</script>
+</body>
+
+</html>
