@@ -80,8 +80,8 @@
             box-sizing: border-box;
             height: 90%;
             width: 90%;
-            background: #333;
-            opacity: 0.95;
+            /* 修正点: opacityプロパティを削除し、背景色をRGBAで指定 */
+            background: rgba(51, 51, 51, 0.95);
             padding: 1.5em;
             border-radius: 10px;
         }
@@ -105,6 +105,22 @@
             max-height: 40vh;
             overflow-y: auto;
             text-align: center;
+        }
+
+        .qr-code-wrapper {
+            display: inline-block;
+            color: #000;
+            /* デフォルトの広いマージン (PCなど) */
+            /* 誤読を防ぐため、広めのマージンを確保 */
+            margin: 10px 50px;
+        }
+
+        /* スマートフォンサイズ程度の画面幅の場合 */
+        @media (max-width: 480px) {
+            .qr-code-wrapper {
+                margin: 10px 5px;
+                /* さらに狭くする */
+            }
         }
 
         #video-preview {
@@ -142,7 +158,6 @@
 
             <button type="button" onclick="startScan({ facingMode: 'environment' })"
                 style="margin-top: 5px">QRスキャン</button>
-            <!-- <button type="button" onclick="startScan({ facingMode: 'user' })" style="margin-top: 5px">前面カメラでスキャン</button> -->
             <button type="button" id="stop-scan-btn" onclick="stopQrScanning()"
                 style="margin-top: 5px; display: none;">スキャン停止</button>
 
@@ -413,15 +428,15 @@
                     const chunk = text.substring(i * chunkSize, (i + 1) * chunkSize);
                     const payload = `P${i + 1}/${numChunks}:${chunk}`;
                     const qrWrapper = document.createElement('div');
-                    qrWrapper.style.margin = '10px 100px';
-                    qrWrapper.style.display = 'inline-block';
-                    qrWrapper.style.color = '#000';
+
+                    qrWrapper.className = 'qr-code-wrapper';
+
                     const label = document.createElement('p');
                     label.textContent = `QRコード ${i + 1} / ${numChunks}`;
                     label.style.textAlign = 'center';
                     label.style.margin = '0 0 5px 0';
                     qrWrapper.appendChild(label);
-                    // **修正点**: QRコードのサイズを 350x350 に変更
+                    // **修正点**: QRコードのサイズ
                     const svgElement = codeWriter.write(payload, 250, 250);
                     qrWrapper.appendChild(svgElement);
                     container.appendChild(qrWrapper);
@@ -486,7 +501,7 @@
             scannedChunks.set(part, chunk);
             const statusElem = document.getElementById('scan-status');
             statusElem.textContent = `読み取り完了: ${scannedChunks.size} / ${totalChunks}。次のQRをスキャンしてください。`;
-            
+
             // **修正点**: バイブレーションの時間を200ミリ秒に長くする
             if ('vibrate' in navigator) navigator.vibrate(200);
 
